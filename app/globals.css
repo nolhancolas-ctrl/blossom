@@ -1,0 +1,44 @@
+/* Imports */
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&display=swap');
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+/* Reset de base */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Corps de la page */
+body {
+  font-family: 'Cormorant Garamond', serif;
+  background-color: #f8f5f1; /* ton beige doux */
+  color: #2f2f2f; /* texte légèrement gris foncé */
+  overflow-x: hidden; /* empêche les scrolls horizontaux */
+  -webkit-font-smoothing: antialiased;
+}
+
+
+/* Valeur par défaut: aucune réduction */
+.counter-scale { --counter-scale: 1; }
+
+/* Dès que le viewport devient "carré" ou plus étroit */
+@media (max-aspect-ratio: 1/1) {
+  .counter-scale { --counter-scale: 0.92; }
+}
+
+@media (max-width: 480px) {
+  .counter-scale { --counter-scale: 0.62; }
+}
+
+@media (max-width: 380px) {
+  .counter-scale { --counter-scale: 0.54; }
+}
+
+/* Liens */
+a {
+  color: inherit;
+  text-decoration: none;
+}
