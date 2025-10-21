@@ -97,7 +97,8 @@ export default function FooterBlurry({
 <section className="rounded-2xl border border-black/10 bg-white/55 backdrop-blur-md shadow-lg p-8 md:col-start-2 md:row-start-1 md:row-span-2 md:h-full flex flex-col justify-center text-center md:text-justify">
   <h3 className="text-xl font-medium tracking-tight mb-4 text-center md:text-left">Not about me</h3>
   <p className="text-slate-800/90 leading-relaxed max-w-prose mx-auto md:mx-0">
-I’m not a growth hacker, not a guru, not a monk. I’m not here to optimize your morning routine or preach a perfect method. I’m not a productivity machine, nor a brand in disguise. I draw, I learn, I share — simple as that. And even if I'm graduated, I'm definitely not an engineer.  </p>
+I’m not a growth hacker, not a guru, not a monk. I’m not here to optimize your morning routine or preach a perfect method. I’m not a productivity machine, nor a brand in disguise. I draw, I learn, I share. Simple as that. 
+And despite my grandmother's displeasure, even if I'm graduated, I'm definitely not an engineer.  </p>
 </section>        </div> 
 
         {/* Bas du footer centré */}

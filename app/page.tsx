@@ -1,5 +1,6 @@
 import Image from "next/image";
 import dynamic from "next/dynamic";
+import PosterSection from "@/components/Poster";
 const Countdown3D = dynamic(() => import("@/components/Countdown3D"), { ssr: false });
 const SplineAuto = dynamic(() => import("@/components/SplineAuto"), { ssr: false });
 
@@ -74,6 +75,14 @@ export default function Home() {
           </button>
         </div>
       </section>
+      <PosterSection
+        leftSrc="https://my.spline.design/postercalathea-moCyI7RjYjeYDAemgq7igMGk/"
+        rightSrc="https://my.spline.design/posterstrelitzia-nESCAFDnDYjmeiSdHTA4tqkc/"
+        // title et ctaHref sont optionnels :
+        title="If you cannot take care of a plant, print one :)"
+        ctaHref="/shop"
+        // interactive={false}
+      />
     </main>
   );
 }
