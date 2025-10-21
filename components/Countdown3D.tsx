@@ -133,24 +133,21 @@ export default function Countdown3D({
 return (
   <div
     ref={ref}
-    className={`relative flex items-center justify-center w-full ${className}`}
+    className={`relative z-10 flex items-center justify-center w-full ${className}`}
     style={{
-      height: `${boxH}px`, // hauteur extérieure suit le scale
+      height: Number.isFinite(boxH) && boxH > 0 ? `${boxH}px` : `${designH}px`, // ✅ fallback visible
+      minHeight: `${Math.max(200, designH * 0.6)}px`, // ✅ jamais 0
       overflow: "visible",
     }}
   >
-{/* Zone “design” centrée et scalée */}
+    {/* Zone “design” centrée et scalée */}
 <div
   className="relative flex flex-col items-center justify-center counter-scale"
   style={{
     width: `${designW}px`,
     height: `${designH}px`,
-    position: "absolute",
-    top: "50%",
-    left: "50%",
-    // ⬇️ on multiplie ton scale calculé par une variable responsive
-    transform: `translate(-50%, -50%) scale(calc(var(--counter-scale, 1) * ${scale}))`,
-    transformOrigin: "center",
+    transform: `scale(calc(var(--counter-scale, 1) * ${Number.isFinite(scale) && scale > 0 ? scale : 1}))`,
+    transformOrigin: "top center",
     willChange: "transform",
   }}
 >

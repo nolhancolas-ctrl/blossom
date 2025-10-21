@@ -39,9 +39,8 @@ export default function Home() {
       </section>
 
       {/* Livre 3D */}
-      <section className="relative z-0 w-full flex flex-col items-center justify-center mt-12">
-        <div className="relative z-0 w-full flex justify-center pointer-events-none"
-              style={{ overflow: "clip", }}>
+      <section className="relative z-0 w-full flex flex-col items-center justify-center mt-12 overflow-hidden">
+        <div className="relative z-0 w-full flex justify-center pointer-events-none">
           <SplineAuto
             src="https://my.spline.design/blossombookanimated-RABoYJaWjZ6evsgSlU4VgfI4/"
             decorSrc="/dorure.webp"

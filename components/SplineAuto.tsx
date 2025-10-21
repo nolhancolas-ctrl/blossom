@@ -96,7 +96,7 @@ export default function SplineAuto({
         height: `${scaledH}px`, // hauteur du flux (évite les jumps)
         background: bg,
         borderRadius: radius,
-        overflow: "hidden",
+        overflow: "clip",
         position: "relative",
         isolation: "isolate",
         zIndex:0,
@@ -157,19 +157,19 @@ export default function SplineAuto({
       )}
 
       {/* === SURFACE Spline — centrée HORIZONTALEMENT === */}
-<div
-  style={{
-    position: "absolute",
-    top: 0,
-    left: "50%",
-    transform: "translateX(-50%)",
-    width: `${scaledW}px`,
-    height: `${scaledH}px`,
-    willChange: "width, height, transform",
-    zIndex: 0, // ✅ reste sous le reste du contenu
-    pointerEvents: "none", // ✅ bloque toute capture d’interaction
-  }}
->
+      <div
+        style={{
+          position: "absolute",
+          top: 0,
+          left: "50%",
+          transform: "translateX(-50%)",
+          width: `${scaledW}px`,
+          height: `${scaledH}px`,
+          willChange: "width, height, transform",
+          zIndex: 2, // ✅ reste sous le reste du contenu
+          pointerEvents: "none", // ✅ bloque toute capture d’interaction
+        }}
+      >
         <iframe
           src={embedUrl}
           title="Spline 3D"
@@ -178,7 +178,9 @@ export default function SplineAuto({
             height: "100%",
             border: 0,
             display: "block",
-            pointerEvents: "none", // ✅ bloque toute capture d’interaction
+            pointerEvents: "none", // ✅ sûr à 100%
+            position: "relative",
+            zIndex: 0,
           }}
           allow="autoplay; fullscreen; xr-spatial-tracking; clipboard-read; clipboard-write"
           allowFullScreen
