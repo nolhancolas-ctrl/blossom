@@ -1,154 +1,150 @@
 // components/SplineAuto.tsx
 "use client";
-
 import { useEffect, useMemo, useRef, useState } from "react";
+
+type CSSLen = number | string;
 
 type Props = {
   /** URL Spline (my.spline.design/...) */
   src: string;
 
-  /** Zone “design” (sert de base au calcul responsive) */
+  /** Dimensions "design" (base de calcul) */
   designW?: number; // px
   designH?: number; // px
 
-  /** Classes utilitaires appliquées au conteneur externe */
-  className?: string;
+  /** Contrôle externe (optionnel) */
+  scale?: number;                 // ✅ si fourni, SplineAuto n'auto-calcule pas
+  containerHeight?: CSSLen;       // ✅ force la hauteur du conteneur si tu préfères
+  offsetXPercent?: number;        // ✅ +15 décale à droite / -15 à gauche
 
-  /** Style visuel du conteneur */
+  /** Espacement géré depuis la page (optionnel) */
+  paddingTop?: CSSLen;            // ex: 0 | "8px" | "1rem"
+  paddingBottom?: CSSLen;
+
+  /** Apparence & comportement */
+  className?: string;
+  style?: React.CSSProperties;
   bg?: string;
   radius?: string;
-
-  /** Interaction Spline (false = pointer-events: none) */
   interactive?: boolean;
 
-  /** --- Dorure (facultatif) --- */
-  decorSrc?: string;       // ex: "/dorure.webp"
-  decorScale?: number;     // 1.6 = 160%
-  decorMaskInner?: number; // % net avant fondu (0..100) ex: 80
-  decorEdgeBlurPx?: number;// flou bords (ex: 2)
-  decorMaxSizeVmin?: number; // limite responsive (ex: 90 → 90vmin)
-  decorMaxSizePx?: number;   // limite absolue (ex: 1200)
+  /** Dorure (facultatif) */
+  decorSrc?: string;
+  decorScale?: number;
+  decorMaxSizeVmin?: number;
+  decorMaxSizePx?: number;
 };
 
 export default function SplineAuto({
   src,
   designW = 1200,
   designH = 700,
+
+  // contrôle externe
+  scale,
+  containerHeight,
+  offsetXPercent = 0,
+
+  // padding externe
+  paddingTop = 0,
+  paddingBottom = 0,
+
   className = "",
+  style,
   bg = "transparent",
   radius = "24px",
   interactive = false,
 
-  // Dorure – valeurs par défaut
   decorSrc,
   decorScale = 1.6,
-  decorMaskInner = 80,
-  decorEdgeBlurPx = 2,
   decorMaxSizeVmin = 90,
   decorMaxSizePx = 1200,
 }: Props) {
   const embedUrl = useMemo(() => toEmbedUrl(src), [src]);
-  const outerRef = useRef<HTMLDivElement | null>(null);
-  const [scale, setScale] = useState(1);
 
-  // Calcule un scale responsive :
-  // - Desktop: scale selon largeur disponible
-  // - Mobile: hauteur = 60% de la hauteur d’écran (pour éviter un 3D trop haut)
+  const outerRef = useRef<HTMLDivElement | null>(null);
+  const [autoScale, setAutoScale] = useState(1);
+
+  // ⚙️ Auto-scale (utilisé SEULEMENT si prop scale n'est pas fournie)
   useEffect(() => {
+    if (typeof scale === "number") return; // contrôle externe actif → on ne calcule rien
     if (!outerRef.current) return;
 
-    const compute = (containerW: number) => {
+    const compute = () => {
+      const w = outerRef.current?.clientWidth ?? 0;
       const vh = window.innerHeight || 0;
-      const hFit = (vh * 0.6) / designH; // mobile: 60% de l'écran
       const isMobile = window.matchMedia("(max-width: 768px)").matches;
-      return isMobile ? hFit : containerW / designW;
+      const s = isMobile ? (vh * 0.6) / designH : w / designW; // même logique qu'avant
+      setAutoScale(s > 0 ? s : 1);
     };
 
-    const ro = new ResizeObserver((entries) => {
-      const w = entries[0]?.contentRect?.width ?? outerRef.current?.clientWidth ?? designW;
-      setScale(compute(w));
-    });
-
+    const ro = new ResizeObserver(compute);
     ro.observe(outerRef.current);
-
-    const onResize = () => {
-      if (!outerRef.current) return;
-      setScale(compute(outerRef.current.clientWidth));
-    };
-    window.addEventListener("resize", onResize);
-
+    window.addEventListener("resize", compute);
+    compute();
     return () => {
       ro.disconnect();
-      window.removeEventListener("resize", onResize);
+      window.removeEventListener("resize", compute);
     };
-  }, [designW, designH]);
+  }, [scale, designW, designH]);
 
-  // Dimensions réelles après scale
-  const scaledW = Math.round(designW * scale);
-  const scaledH = Math.round(designH * scale);
+  const effScale = typeof scale === "number" && scale > 0 ? scale : autoScale;
+  const frameW = Math.round(designW * effScale);
+  const frameH = Math.round(designH * effScale);
 
   return (
     <div
       ref={outerRef}
       className={className}
       style={{
+        position: "relative",
         width: "100%",
-        height: `${scaledH}px`, // hauteur du flux (évite les jumps)
+        // Hauteur du bloc dans le flux (pour que le padding soit visible)
+        height: containerHeight ?? frameH,
+        paddingTop,
+        paddingBottom,
+
         background: bg,
         borderRadius: radius,
-        overflow: "clip",
-        position: "relative",
+        overflow: "hidden",
         isolation: "isolate",
-        zIndex:0,
+        ...style,
       }}
     >
-      {/* === DÉCOR DORÉ (optionnel) — centré en largeur & hauteur === */}
+      {/* === Décor (optionnel) === */}
       {decorSrc && (
         <div
           aria-hidden
-          className="pointer-events-none select-none"
           style={{
             position: "absolute",
-            left: "50%",
-            top: "50%",
-            transform: "translate(-50%, -50%)", // centre parfait
+            inset: 0,
+            display: "grid",
+            placeItems: "center",
+            pointerEvents: "none",
             zIndex: 0,
           }}
         >
-          {/* Couche floutée (halo doré diffus) */}
           <img
             src={decorSrc}
             alt=""
             style={{
               transform: `scale(${decorScale})`,
-              transformOrigin: "center",
               objectFit: "contain",
-              objectPosition: "center",
               maxWidth: `min(${decorMaxSizeVmin}vmin, ${decorMaxSizePx}px)`,
               maxHeight: `min(${decorMaxSizeVmin}vmin, ${decorMaxSizePx}px)`,
-              filter: "blur(12px) brightness(1.1)", // 🌟 flou total et léger renforcement de la lumière
-              opacity: 0.85, // rend le halo plus doux
-              display: "block",
+              filter: "blur(12px) brightness(1.1)",
+              opacity: 0.85,
               position: "absolute",
-              inset: 0,
-              margin: "auto",
-              zIndex: 0,
             }}
           />
-          
-          {/* Couche nette au-dessus (traits intacts) */}
           <img
             src={decorSrc}
             alt="Décor doré Blossom"
             style={{
               transform: `scale(${decorScale})`,
-              transformOrigin: "center",
               objectFit: "contain",
-              objectPosition: "center",
               maxWidth: `min(${decorMaxSizeVmin}vmin, ${decorMaxSizePx}px)`,
               maxHeight: `min(${decorMaxSizeVmin}vmin, ${decorMaxSizePx}px)`,
-              opacity: 1,
-              display: "block",
               position: "relative",
               zIndex: 1,
             }}
@@ -156,31 +152,30 @@ export default function SplineAuto({
         </div>
       )}
 
-      {/* === SURFACE Spline — centrée HORIZONTALEMENT === */}
+      {/* === Surface Spline centrée + offset horizontal === */}
       <div
         style={{
           position: "absolute",
           top: 0,
-          left: "50%",
+          left: `calc(50% + ${offsetXPercent}%)`,
           transform: "translateX(-50%)",
-          width: `${scaledW}px`,
-          height: `${scaledH}px`,
-          willChange: "width, height, transform",
-          zIndex: 2, // ✅ reste sous le reste du contenu
-          pointerEvents: "none", // ✅ bloque toute capture d’interaction
+          width: frameW,
+          height: frameH,
+          pointerEvents: interactive ? "auto" : "none",
+          willChange: "transform",
+          zIndex: 2,
         }}
       >
         <iframe
           src={embedUrl}
           title="Spline 3D"
           style={{
+            position: "absolute",
+            inset: 0,
             width: "100%",
             height: "100%",
             border: 0,
-            display: "block",
-            pointerEvents: "none", // ✅ sûr à 100%
-            position: "relative",
-            zIndex: 0,
+            pointerEvents: interactive ? "auto" : "none",
           }}
           allow="autoplay; fullscreen; xr-spatial-tracking; clipboard-read; clipboard-write"
           allowFullScreen
@@ -192,7 +187,6 @@ export default function SplineAuto({
   );
 }
 
-/** Normalise l’URL Spline et injecte des paramètres utiles si absents */
 function toEmbedUrl(u: string) {
   try {
     const url = new URL(u);
