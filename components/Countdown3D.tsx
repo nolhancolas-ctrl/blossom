@@ -136,7 +136,7 @@ return (
     className={`relative z-10 flex items-center justify-center w-full ${className}`}
     style={{
       height: Number.isFinite(boxH) && boxH > 0 ? `${boxH}px` : `${designH}px`, // ✅ fallback visible
-      minHeight: `${Math.max(200, designH * 0.6)}px`, // ✅ jamais 0
+      minHeight: `${Math.max( designH * 0.5)}px`,
       overflow: "visible",
     }}
   >

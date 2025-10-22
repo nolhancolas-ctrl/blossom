@@ -11,10 +11,7 @@ export default function Home() {
   const launch = "2025-12-01T10:00:00+09:00";
 
   return (
-    <main
-      className="min-h-screen bg-[#f8f5f1] bg-cover bg-center overflow-x-hidden"
-      style={{ backgroundImage: "url('/blossom_background.jpg')" }}
-    >
+    <>
       {/* === SECTION HEADER === */}
       <section>
         {/* Header large (desktop) */}
@@ -41,12 +38,17 @@ export default function Home() {
         </header>
       </section>
 
-      {/* === LIVRE 3D (client wrapper) === */}
+      {/* === LIVRE 3D === */}
       <Book3DInline />
 
       {/* === COMPTEUR === */}
-      <section className="relative z-10 w-full flex flex-col items-center justify-center mt-12">
-        <div className="mt-8 grid place-items-center">
+      <section
+        className="relative z-10 w-full flex flex-col items-center justify-center
+                   mt-6 md:mt-8 lg:mt-10
+                   py-[clamp(0px,0.8vw,12px)]
+                   [@media(max-aspect-ratio:1/1)]:py-0"
+      >
+        <div className="grid place-items-center">
           <Countdown3D target={launch} size="lg" />
         </div>
       </section>
@@ -74,6 +76,6 @@ export default function Home() {
         title="If you cannot take care of a plant, print one :)"
         ctaHref="/shop"
       />
-    </main>
+    </>
   );
 }

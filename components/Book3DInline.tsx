@@ -44,26 +44,21 @@ export default function Book3DInline() {
                  py-2 md:py-6 lg:py-10
                  overflow-hidden"
     >
-<div
-  ref={hostRef}
-  className="relative z-0 flex justify-center pointer-events-none
-             h-[66dvh] md:h-[76dvh] lg:h-[94dvh] w-full
-             lg:[clip-path:inset(0_200px_0_200px)]"
->
-        <SplineAuto
-          src="https://my.spline.design/blossombookanimated-RABoYJaWjZ6evsgSlU4VgfI4/"
-          decorSrc="/dorure.webp"
-          designW={designW}
-          designH={designH}
-          /* contrôle depuis la page (ici le wrapper client) */
-          scale={scale}
-          offsetXPercent={3}
-          paddingTop={0}
-          paddingBottom={0}
-          containerHeight="100%"
-          interactive={false}
-          className="w-full h-full"
-        />
+        <div
+        ref={hostRef}
+        className="relative z-0 flex justify-center pointer-events-none
+                    h-[55svh] md:h-[76dvh] lg:h-[94dvh] w-full
+                    lg:[clip-path:inset(0_200px_0_200px)]"
+        >
+<SplineAuto
+  src="https://my.spline.design/blossombookanimated-RABoYJaWjZ6evsgSlU4VgfI4/"
+  decorSrc="/dorure.webp"
+  designW={1200}
+  designH={700}
+  scale={scale}
+  paddingTop={0}
+  paddingBottom={0}
+/>
       </div>
     </section>
   );

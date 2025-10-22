@@ -12,13 +12,14 @@ type Props = {
   designW?: number; // px
   designH?: number; // px
 
-  /** Contrôle externe (optionnel) */
-  scale?: number;                 // ✅ si fourni, SplineAuto n'auto-calcule pas
-  containerHeight?: CSSLen;       // ✅ force la hauteur du conteneur si tu préfères
-  offsetXPercent?: number;        // ✅ +15 décale à droite / -15 à gauche
+  /** Contrôles externes */
+  scale?: number;            // si fourni, on n'auto-calcule plus
+  renderScale?: number;      // 0.5..1 — réduit la résolution WebGL, upscale visuel (perf)
 
-  /** Espacement géré depuis la page (optionnel) */
-  paddingTop?: CSSLen;            // ex: 0 | "8px" | "1rem"
+  containerHeight?: CSSLen;  // force la hauteur du conteneur
+
+  /** Espacement (géré depuis la page) */
+  paddingTop?: CSSLen;
   paddingBottom?: CSSLen;
 
   /** Apparence & comportement */
@@ -28,11 +29,12 @@ type Props = {
   radius?: string;
   interactive?: boolean;
 
-  /** Dorure (facultatif) */
+  /** Décor (fusion : une seule image floutée) */
   decorSrc?: string;
   decorScale?: number;
-  decorMaxSizeVmin?: number;
-  decorMaxSizePx?: number;
+  decorBlurPx?: number;      // intensité de flou du décor fusionné
+  decorMaxSizeVmin?: number; // limite responsive
+  decorMaxSizePx?: number;   // limite absolue
 };
 
 export default function SplineAuto({
@@ -40,12 +42,11 @@ export default function SplineAuto({
   designW = 1200,
   designH = 700,
 
-  // contrôle externe
   scale,
-  containerHeight,
-  offsetXPercent = 0,
+  renderScale = 0.6, // 1 = pleine résolution ; ex: 0.8 sur desktop si ça rame
 
-  // padding externe
+  containerHeight,
+
   paddingTop = 0,
   paddingBottom = 0,
 
@@ -57,6 +58,7 @@ export default function SplineAuto({
 
   decorSrc,
   decorScale = 1.6,
+  decorBlurPx = 0.2,         // flou global (fusion)
   decorMaxSizeVmin = 90,
   decorMaxSizePx = 1200,
 }: Props) {
@@ -65,32 +67,62 @@ export default function SplineAuto({
   const outerRef = useRef<HTMLDivElement | null>(null);
   const [autoScale, setAutoScale] = useState(1);
 
-  // ⚙️ Auto-scale (utilisé SEULEMENT si prop scale n'est pas fournie)
+  // Auto-scale uniquement si 'scale' n'est pas fourni.
+  // Recalcule UNIQUEMENT quand la largeur viewport/host change ou quand le breakpoint mobile↔desktop change.
   useEffect(() => {
-    if (typeof scale === "number") return; // contrôle externe actif → on ne calcule rien
+    if (typeof scale === "number") return; // contrôle externe actif
     if (!outerRef.current) return;
 
-    const compute = () => {
-      const w = outerRef.current?.clientWidth ?? 0;
-      const vh = window.innerHeight || 0;
-      const isMobile = window.matchMedia("(max-width: 768px)").matches;
-      const s = isMobile ? (vh * 0.6) / designH : w / designW; // même logique qu'avant
-      setAutoScale(s > 0 ? s : 1);
+    const mq = window.matchMedia("(max-width: 768px)");
+    let last = {
+      iw: 0,                                  // window.innerWidth précédent
+      w: 0,                                   // largeur du host précédente
+      mobile: mq.matches,                     // état du breakpoint
     };
 
-    const ro = new ResizeObserver(compute);
-    ro.observe(outerRef.current);
-    window.addEventListener("resize", compute);
-    compute();
+    const recompute = () => {
+      const el = outerRef.current!;
+      const iw = window.innerWidth || 0;
+      const w = el.clientWidth || iw;
+      const mobile = mq.matches;
+
+      const widthChanged =
+        Math.abs(w - last.w) > 0.5 || Math.abs(iw - last.iw) > 0.5;
+      const bpChanged = mobile !== last.mobile;
+
+      if (!widthChanged && !bpChanged) return;
+
+      last = { iw, w, mobile };
+
+      const vh = window.innerHeight || 0;
+      // Mobile: on borne la hauteur à ~60% de l'écran ; Desktop: fit largeur
+      const s = mobile ? (vh * 0.6) / designH : w / designW;
+      setAutoScale((prev) => (Math.abs((s || 1) - prev) > 1e-3 ? (s || 1) : prev));
+    };
+
+    window.addEventListener("resize", recompute, { passive: true });
+    mq.addEventListener?.("change", recompute);
+
+    // premier calcul
+    recompute();
+
     return () => {
-      ro.disconnect();
-      window.removeEventListener("resize", compute);
+      window.removeEventListener("resize", recompute);
+      mq.removeEventListener?.("change", recompute);
     };
   }, [scale, designW, designH]);
 
   const effScale = typeof scale === "number" && scale > 0 ? scale : autoScale;
-  const frameW = Math.round(designW * effScale);
-  const frameH = Math.round(designH * effScale);
+
+  // Taille affichée (visuelle)
+  const displayW = Math.max(1, Math.round(designW * effScale));
+  const displayH = Math.max(1, Math.round(designH * effScale));
+
+  // Taille rendue (WebGL) — plus petite pour soulager le GPU, puis upscale CSS
+  const pr = Math.max(0.5, Math.min(1, renderScale || 1)); // borne 0.5..1
+  const renderW = Math.max(1, Math.round(displayW * pr));
+  const renderH = Math.max(1, Math.round(displayH * pr));
+  const upscale = 1 / pr; // ex. pr=0.8 → upscale=1.25
 
   return (
     <div
@@ -99,8 +131,8 @@ export default function SplineAuto({
       style={{
         position: "relative",
         width: "100%",
-        // Hauteur du bloc dans le flux (pour que le padding soit visible)
-        height: containerHeight ?? frameH,
+        // Hauteur réelle dans le flux (pour que padding/top/bottom soient visibles)
+        height: containerHeight ?? displayH,
         paddingTop,
         paddingBottom,
 
@@ -108,10 +140,15 @@ export default function SplineAuto({
         borderRadius: radius,
         overflow: "hidden",
         isolation: "isolate",
+
+        // Limite la propagation des invalidations (perf)
+        contain: "layout paint size style",
+        backfaceVisibility: "hidden",
+
         ...style,
       }}
     >
-      {/* === Décor (optionnel) === */}
+      {/* === Décor fusionné : une seule image floutée et légèrement opaque === */}
       {decorSrc && (
         <div
           aria-hidden
@@ -126,41 +163,33 @@ export default function SplineAuto({
         >
           <img
             src={decorSrc}
-            alt=""
-            style={{
-              transform: `scale(${decorScale})`,
-              objectFit: "contain",
-              maxWidth: `min(${decorMaxSizeVmin}vmin, ${decorMaxSizePx}px)`,
-              maxHeight: `min(${decorMaxSizeVmin}vmin, ${decorMaxSizePx}px)`,
-              filter: "blur(12px) brightness(1.1)",
-              opacity: 0.85,
-              position: "absolute",
-            }}
-          />
-          <img
-            src={decorSrc}
             alt="Décor doré Blossom"
             style={{
               transform: `scale(${decorScale})`,
+              transformOrigin: "center",
               objectFit: "contain",
+              objectPosition: "center",
               maxWidth: `min(${decorMaxSizeVmin}vmin, ${decorMaxSizePx}px)`,
               maxHeight: `min(${decorMaxSizeVmin}vmin, ${decorMaxSizePx}px)`,
+              filter: `blur(${decorBlurPx}px)`, // flou global
+              opacity: 0.9,                      // opacité demandée
               position: "relative",
-              zIndex: 1,
+              display: "block",
             }}
           />
         </div>
       )}
 
-      {/* === Surface Spline centrée + offset horizontal === */}
+      {/* === Surface Spline centrée + upscale visuel === */}
       <div
         style={{
           position: "absolute",
           top: 0,
-          left: `calc(50% + ${offsetXPercent}%)`,
-          transform: "translateX(-50%)",
-          width: frameW,
-          height: frameH,
+          left: `50.8%`,
+          transform: `translateX(-50%) scale(${upscale})`, // upscale visuel (rend moins de pixels WebGL)
+          transformOrigin: "top center",
+          width: `${renderW}px`,  // rendu WebGL "réduit"
+          height: `${renderH}px`,
           pointerEvents: interactive ? "auto" : "none",
           willChange: "transform",
           zIndex: 2,
@@ -170,16 +199,15 @@ export default function SplineAuto({
           src={embedUrl}
           title="Spline 3D"
           style={{
-            position: "absolute",
-            inset: 0,
             width: "100%",
             height: "100%",
             border: 0,
+            display: "block",
             pointerEvents: interactive ? "auto" : "none",
           }}
+          loading="lazy" // laisse le navigateur init le contexte au bon moment
           allow="autoplay; fullscreen; xr-spatial-tracking; clipboard-read; clipboard-write"
           allowFullScreen
-          loading="eager"
           referrerPolicy="no-referrer-when-downgrade"
         />
       </div>
@@ -187,6 +215,7 @@ export default function SplineAuto({
   );
 }
 
+/** Normalise l’URL Spline et injecte des paramètres utiles si absents */
 function toEmbedUrl(u: string) {
   try {
     const url = new URL(u);
