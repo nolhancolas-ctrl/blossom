@@ -1,13 +1,13 @@
-// components/Poster.tsx
+"use client";
 import React from "react";
 
 type PosterSectionProps = {
-  leftSrc: string;   // URL Spline (my.spline.design/...)
-  rightSrc: string;  // URL Spline (my.spline.design/...)
+  leftSrc: string;
+  rightSrc: string;
   title?: string;
   ctaHref?: string;
   className?: string;
-  interactive?: boolean; // true si tu veux laisser l'iframe cliquable
+  interactive?: boolean;
 };
 
 export default function PosterSection({
@@ -23,7 +23,7 @@ export default function PosterSection({
       className={`mx-auto max-w-6xl px-4 sm:px-6 mb-24 sm:mb-32 ${className}`}
       aria-labelledby="poster-section-title"
     >
-      {/* Titre */}
+      {/* === Titre === */}
       <h2
         id="poster-section-title"
         className="text-center text-lg sm:text-xl md:text-2xl font-medium tracking-tight text-slate-800"
@@ -31,21 +31,16 @@ export default function PosterSection({
         {title}
       </h2>
 
-      {/* Grille des 2 posters (côte à côte desktop, empilés mobile) */}
-      <div className="mt-5 sm:mt-6 grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 lg:gap-6">
-        <Poster3D
-          src={leftSrc}
-          title="3D Poster – Left"
-          interactive={interactive}
-        />
-        <Poster3D
-          src={rightSrc}
-          title="3D Poster – Right"
-          interactive={interactive}
-        />
+      {/* === Grille des deux affiches === */}
+      <div
+        className="mt-5 sm:mt-6 grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 lg:gap-6
+                   relative lg:[clip-path:inset(0_20px_0_0)]"
+      >
+        <Poster3D src={leftSrc} title="3D Poster – Left" interactive={interactive} />
+        <Poster3D src={rightSrc} title="3D Poster – Right" interactive={interactive} />
       </div>
 
-      {/* CTA type champ d'email */}
+      {/* === CTA “see everything” === */}
       <div className="mt-6 sm:mt-8 flex items-center justify-center">
         <a
           href={ctaHref}
@@ -62,7 +57,12 @@ export default function PosterSection({
   );
 }
 
-/** Carte contenant l'embed Spline, avec ratio 4:5 et débordements propres */
+/**
+ * Poster3D – carte Spline 3D avec ratio 4:5, responsive blur ajusté
+ * - flou désactivé sur mobile
+ * - flou réduit sur laptop
+ * - masquage latéral géré par parent
+ */
 function Poster3D({
   src,
   title,
@@ -73,8 +73,15 @@ function Poster3D({
   interactive?: boolean;
 }) {
   return (
-    <div className="group relative overflow-hidden rounded-2xl bg-white/10 shadow-sm backdrop-blur-[4px]">
-      {/* Conteneur ratio 4:5 (125%) pour un rendu “affiche” */}
+    <div
+      className={`
+        group relative overflow-hidden rounded-2xl
+        bg-white/10 shadow-sm
+        backdrop-blur-none md:backdrop-blur-[2px] lg:backdrop-blur-[4px]
+        transition-all duration-500
+      `}
+    >
+      {/* Ratio 4:5 */}
       <div className="relative w-full" style={{ paddingTop: "125%" }}>
         <iframe
           src={src}
@@ -88,10 +95,10 @@ function Poster3D({
         />
       </div>
 
-      {/* Liseré subtil type “carte” */}
+      {/* Liseré subtil */}
       <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-black/5" />
 
-      {/* Hover léger (cohérent avec le footer) */}
+      {/* Hover léger */}
       <div className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-t from-black/0 via-black/0 to-black/0" />
     </div>
   );

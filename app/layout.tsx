@@ -1,8 +1,7 @@
 // app/layout.tsx
 import "./globals.css";
 import type { Metadata } from "next";
-import FooterSketch from "@/components/FooterSketch";
-import ParallaxBg from "@/components/ParallaxBg";
+import FooterOffWhite from "@/components/Footer";
 
 export const metadata: Metadata = {
   title: "Blossom – Le livre",
@@ -13,18 +12,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="fr">
       <body className="min-h-[100svh] antialiased">
-        {/* Fond parallax (auto small/big) */}
-        <ParallaxBg />
-
-        {/* Contenu */}
+        {/* Contenu au-dessus du calque fixe (les pages gèrent le parallax) */}
         <div className="relative z-10 flex min-h-[100svh] flex-col overflow-x-hidden">
-          {/* Main */}
           <main className="flex-1">{children}</main>
 
-          {/* Footer marqué pour la fin du parallax */}
-          <footer data-site-footer>
-            <FooterSketch bgUrl="/background_big.jpg" email="hello@blossom.example" />
-          </footer>
+          {/* Footer sur fond blanc cassé (recouvre le parallax) */}
+          <FooterOffWhite />
         </div>
       </body>
     </html>
