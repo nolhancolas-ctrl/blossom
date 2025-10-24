@@ -1,19 +1,17 @@
+// components/Countdown3D.tsx
 "use client";
-
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { useResponsiveScale } from "@/lib/useResponsiveScale";
 
-/* ---------- Types & constantes ---------- */
 type Countdown3DProps = {
-  target: Date | string | number;
+  target?: Date | string | number; // défaut Tokyo: 2026-04-21
   size?: "sm" | "md" | "lg";
   designW?: number;
-  designH?: number; // hauteur de la "zone design" (carte + texte)
+  designH?: number;
   className?: string;
   onComplete?: () => void;
 };
-
 const SIZES = {
   sm: { digitH: 44, font: "text-2xl", gap: 12 },
   md: { digitH: 64, font: "text-4xl", gap: 16 },
@@ -21,40 +19,69 @@ const SIZES = {
 } as const;
 type SizeKey = keyof typeof SIZES;
 
-/* hauteur réservée pour la ligne de texte sous le compteur (dans la zone design) */
-const TEXT_BLOCK_H = 40;
+/* --- calendrier: months/days/hours --- */
+function diffMDH(target: Date) {
+  const now = new Date();
 
-/* ---------- Utils ---------- */
-function getRemaining(targetMs: number) {
-  const now = Date.now();
-  const diff = Math.max(0, Math.floor((targetMs - now) / 1000));
-  const hrs = Math.floor(diff / 3600);
-  const mins = Math.floor((diff % 3600) / 60);
-  const secs = diff % 60;
-  return { diff, hrs, mins, secs };
+  if (target.getTime() <= now.getTime()) {
+    return { months: 0, days: 0, hours: 0, done: true };
+  }
+
+  // 1) différence brute en mois (année*12 + mois)
+  const monthsTotalNow = now.getFullYear() * 12 + now.getMonth();
+  const monthsTotalTgt = target.getFullYear() * 12 + target.getMonth();
+  let months = monthsTotalTgt - monthsTotalNow;
+
+  // 2) ancre = now + months (préserve jour & heure de "now")
+  let anchor = new Date(now);
+  anchor.setMonth(anchor.getMonth() + months);
+
+  // ⚠️ si l’ancre dépasse la cible (même mois mais jour/heure trop loin) → recule d’1 mois
+  if (anchor.getTime() > target.getTime()) {
+    months -= 1;
+    anchor = new Date(now);
+    anchor.setMonth(anchor.getMonth() + months);
+  }
+
+  // 3) reste après les mois entiers
+  let remMs = target.getTime() - anchor.getTime();
+
+  // Pour limiter les effets DST, on dérive days/hours depuis le reste en ms.
+  const HOUR = 60 * 60 * 1000;
+  const DAY = 24 * HOUR;
+
+  // Nombre entier de jours dans le reste
+  const days = Math.floor(remMs / DAY);
+  remMs -= days * DAY;
+
+  // Nombre entier d'heures dans le reliquat
+  const hours = Math.floor(remMs / HOUR);
+
+  return {
+    months: Math.max(0, months),
+    days: Math.max(0, days),
+    hours: Math.max(0, hours),
+    done: false,
+  };
 }
 
-/* ---------- Rouleaux de chiffres ---------- */
+/* --- rouleaux --- */
 function DigitReel({ value, height }: { value: number; height: number }) {
   const prev = useRef<number>(value);
-  const [y, setY] = useState<number>(-(value + 10) * height); // deck 10..19
+  const [y, setY] = useState<number>(-(value + 10) * height);
   const [isClient, setIsClient] = useState(false);
   const sequence = useMemo(() => Array.from({ length: 20 }, (_, i) => i % 10), []);
-
   useEffect(() => setIsClient(true), []);
-
   useEffect(() => {
     if (!isClient) return;
     let delta = value - prev.current;
-    if (delta < 0) delta += 10; // wrap 9->0
-    const targetY = -(value + 10) * height;
-    setY(targetY);
+    if (delta < 0) delta += 10;
+    setY((-(value + 10) * height));
     prev.current = value;
   }, [value, height, isClient]);
-
   return (
     <div
-      className="relative w-full overflow-hidden rounded-xl shadow-inner [perspective:800px] bg-white"
+      className="relative w-full overflow-hidden rounded-xl bg-white"
       style={{ height }}
       aria-hidden
     >
@@ -63,8 +90,8 @@ function DigitReel({ value, height }: { value: number; height: number }) {
         initial={{ y }}
         animate={{ y }}
         transition={{ duration: 0.35, ease: "easeInOut" }}
+        className="absolute left-0 right-0"
         style={{ willChange: "transform" }}
-        className="absolute left-0 right-0 [transform-style:preserve-3d]"
       >
         {sequence.map((d, i) => (
           <div
@@ -76,11 +103,10 @@ function DigitReel({ value, height }: { value: number; height: number }) {
           </div>
         ))}
       </motion.div>
-      <div className="pointer-events-none absolute inset-0 ring-1 ring-black/5 shadow-[inset_0_10px_20px_-8px_rgba(0,0,0,0.08),inset_0_-10px_20px_-8px_rgba(0,0,0,0.06)] rounded-xl" />
+      <div className="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-black/5 shadow-[inset_0_10px_20px_-8px_rgba(0,0,0,0.08),inset_0_-10px_20px_-8px_rgba(0,0,0,0.06)]" />
     </div>
   );
 }
-
 function TwoDigits({ num, height }: { num: number; height: number }) {
   const tens = Math.floor(num / 10) % 10;
   const ones = num % 10;
@@ -92,124 +118,145 @@ function TwoDigits({ num, height }: { num: number; height: number }) {
   );
 }
 
+/* --- principal --- */
 export default function Countdown3D({
-  target,
+  target = "2026-04-21T00:00:00+09:00",
   size = "md",
   className = "",
   designW = 800,
   designH = 260,
   onComplete,
-}: 
+}: Countdown3DProps) {
+  const dims = SIZES[(size as SizeKey) ?? "md"] ?? SIZES.md;
+  const targetMs = useMemo(() => new Date(target).getTime(), [target]);
+  const { ref, scale, boxH } = useResponsiveScale(designW, designH, 1);
+  const [isClient, setIsClient] = useState(false);
+  const [{ months, days, hours, done }, setState] = useState(() => ({ months: 0, days: 0, hours: 0, done: false }));
 
-  Countdown3DProps) {
-    const dims = SIZES[(size as SizeKey) ?? "md"] ?? SIZES.md;
-    const targetMs = useMemo(() => new Date(target).getTime(), [target]);
-    const { ref, scale, boxH } = useResponsiveScale(designW, designH, 1); // scale seulement à partir du format carré
-    const [isClient, setIsClient] = useState(false);
-    const [{ diff, hrs, mins, secs }, setRemaining] = useState(() => ({
-      diff: -1,
-      hrs: 0,
-      mins: 0,
-      secs: 0,
-  }));
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
+  useEffect(() => setIsClient(true), []);
   useEffect(() => {
     if (!isClient) return;
     const tick = () => {
-      const rem = getRemaining(targetMs);
-      setRemaining(rem);
-      if (rem.diff === 0 && onComplete) onComplete?.();
+      const res = diffMDH(new Date(targetMs));
+      setState(res);
+      if (res.done && onComplete) onComplete?.();
     };
-    
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, [isClient, targetMs, onComplete]);
 
-return (
-  <div
-    ref={ref}
-    className={`relative z-10 flex items-center justify-center w-full ${className}`}
-    style={{
-      height: Number.isFinite(boxH) && boxH > 0 ? `${boxH}px` : `${designH}px`, // ✅ fallback visible
-      minHeight: `${Math.max( designH * 0.5)}px`,
-      overflow: "visible",
-    }}
-  >
-    {/* Zone “design” centrée et scalée */}
-<div
-  className="relative flex flex-col items-center justify-center counter-scale"
-  style={{
-    width: `${designW}px`,
-    height: `${designH}px`,
-    transform: `scale(calc(var(--counter-scale, 1) * ${Number.isFinite(scale) && scale > 0 ? scale : 1}))`,
-    transformOrigin: "top center",
-    willChange: "transform",
-  }}
->
-      {/* Carte avec image de fond floutée (contenu net) */}
+  return (
+    <div
+      ref={ref}
+      className={`relative z-10 flex items-center justify-center w-full ${className}`}
+      style={{
+        height: Number.isFinite(boxH) && boxH > 0 ? `${boxH}px` : `${designH}px`,
+        minHeight: `${Math.max(designH * 0.5)}px`,
+        overflow: "visible",
+      }}
+    >
       <div
-        className="relative isolate overflow-hidden rounded-2xl"
+        className="relative group flex flex-col items-center justify-center counter-scale"
         style={{
-          width: `auto%`,
-          maxWidth: `${designW}px`,
-          height: `auto`,
-          boxSizing: "border-box",
+          width: `${designW}px`,
+          height: `${designH}px`,
+          transform: `scale(calc(var(--counter-scale, 1) * ${Number.isFinite(scale) && scale > 0 ? scale : 1}))`,
+          transformOrigin: "top center",
+          willChange: "transform",
         }}
       >
-        {/* Calque d'arrière-plan flouté */}
+        {/* Carte verre avec hover GL0W + rayon */}
         <div
-          aria-hidden
-          className="absolute inset-0 pointer-events-none"
+          className="relative isolate overflow-hidden rounded-2xl backdrop-blur-md transition-all duration-500"
           style={{
-            backgroundImage: "url('/background_countdown3D.jpg')",
-            backgroundSize: "cover",
-            backgroundRepeat: "no-repeat",
-            backgroundPosition: "center",
-            filter: "blur(4px)",
+            background: "rgba(255,255,255,0.26)",
+            border: "1px solid rgba(255,255,255,0.35)",
+            boxShadow: "0 20px 50px rgba(0,0,0,0.12), inset 0 0.5px 0 rgba(255,255,255,0.35)",
           }}
-        />
-
-        {/* Contenu au premier plan */}
-        <div
-          className="relative z-10 flex items-center justify-center flex-wrap"
-          style={{ gap: dims.gap, padding: "24px 20px" }}
         >
-          {/* Bloc compteur */}
-          <div className="flex flex-col items-center gap-2">
-            <TwoDigits num={isClient ? hrs % 100 : 0} height={dims.digitH} />
-            <span className="uppercase tracking-wider text-[10px] text-slate-600">
-              Heures
-            </span>
-          </div>
+          {/* glow bordure au hover */}
+          <div
+            className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+            style={{
+              boxShadow: "0 0 0 2px rgba(255,255,255,0.65), inset 0 0 30px rgba(255,255,255,0.22)",
+            }}
+          />
+          {/* rayon qui parcourt la bordure (plus visible) */}
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-0 rounded-2xl"
+            style={{
+              padding: 1.5,
+              WebkitMask: "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
+              WebkitMaskComposite: "xor",
+              maskComposite: "exclude",
+              background:
+                "conic-gradient(from 0deg, rgba(255,255,255,0.0), rgba(255,255,255,0.9), rgba(255,255,255,0.0))",
+              animation: "borderSweep 2.4s linear infinite",
+              opacity: 0.85,                // ↑ visibilité
+              filter: "blur(0.2px)",        // léger soft
+            }}
+          />
 
-          <div className={`${dims.font} text-slate-500 select-none px-1`}>:</div>
+          {/* BG flouté */}
+          <div
+            aria-hidden
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              backgroundImage: "url('/background_countdown3D.jpg')",
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              filter: "blur(4px)",
+              transform: "scale(1.02)",
+            }}
+          />
 
-          <div className="flex flex-col items-center gap-2">
-            <TwoDigits num={isClient ? mins : 0} height={dims.digitH} />
-            <span className="uppercase tracking-wider text-[10px] text-slate-600">
-              Minutes
-            </span>
-          </div>
-
-          <div className={`${dims.font} text-slate-500 select-none px-1`}>:</div>
-
-          <div className="flex flex-col items-center gap-2">
-            <TwoDigits num={isClient ? secs : 0} height={dims.digitH} />
-            <span className="uppercase tracking-wider text-[10px] text-slate-600">
-              Secondes
-            </span>
+          {/* contenu */}
+          <div className="relative z-10 flex items-center justify-center flex-wrap" style={{ gap: dims.gap, padding: "24px 20px" }}>
+            {/* Months */}
+            <div className="flex flex-col items-center gap-2">
+              <TwoDigits num={isClient ? months % 100 : 0} height={dims.digitH} />
+              <span className="uppercase tracking-wider text-[10px] text-slate-700">Months</span>
+            </div>
+            <div className={`${dims.font} text-slate-500 select-none px-1`}>:</div>
+            {/* Days */}
+            <div className="flex flex-col items-center gap-2">
+              <TwoDigits num={isClient ? days % 100 : 0} height={dims.digitH} />
+              <span className="uppercase tracking-wider text-[10px] text-slate-700">Days</span>
+            </div>
+            <div className={`${dims.font} text-slate-500 select-none px-1`}>:</div>
+            {/* Hours */}
+            <div className="flex flex-col items-center gap-2">
+              <TwoDigits num={isClient ? hours % 100 : 0} height={dims.digitH} />
+              <span className="uppercase tracking-wider text-[10px] text-slate-700">Hours</span>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
 
-    {/* Halo pastel discret */}
-    <div className="pointer-events-none absolute -z-10 blur-3xl opacity-40 w-[380px] h-[140px] bg-[radial-gradient(ellipse_at_center,rgba(247,197,159,0.35),transparent_60%)]" />
-  </div>
-);
+        {/* Ombre au sol (plus nette) */}
+        <div
+          className="pointer-events-none absolute -z-10"
+          style={{
+            bottom: -18,
+            width: 420,
+            height: 160,
+            filter: "blur(40px)",
+            opacity: 0.45,
+            background: "radial-gradient(ellipse at center, rgba(0,0,0,0.26), transparent 60%)",
+          }}
+        />
+      </div>
+
+      <style jsx>{`
+        @keyframes borderSweep {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        @media (hover: hover) {
+          .group:hover { transform: translateZ(0); }
+        }
+      `}</style>
+    </div>
+  );
 }

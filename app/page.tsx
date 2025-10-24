@@ -72,6 +72,10 @@ export default function Home() {
           <div className="grid place-items-center mt-4">
             <Countdown3D target={launch} size="lg" />
           </div>
+          <h2 className="text-3xl md:text-4xl font-medium tracking-tight text-slate-800 mb-6 text-center">
+             Until Blossom Blooms
+          </h2>
+
         </section>
 
         {/* === MAILING SECTION === */}

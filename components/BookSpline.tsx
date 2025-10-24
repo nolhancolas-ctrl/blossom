@@ -43,65 +43,71 @@ export default function BookSpline({
   /** scale unique pour tout le composant (livre + décor) */
   const [scale, setScale] = useState(1);
 
-  // On capture une seule fois la "small viewport height" approximative (VH₀)
+  /** Capture une fois la hauteur viewport au montage (évite le wobble mobile) */
   const vh0Ref = useRef<number>(0);
   useEffect(() => {
     if (!vh0Ref.current) {
-      // On capture la hauteur dispo au montage et on ne la re-touche plus (évite le wobble mobile)
       vh0Ref.current = window.innerHeight || 0;
     }
   }, []);
 
+  /** Recalc **UNIQUEMENT** si la largeur change (ou orientation) */
   useEffect(() => {
-    // Buckets d’aspect : desktop (>1), square (~1), mobile tall (≤1)
-    const mqSquareLo = window.matchMedia("(min-aspect-ratio: 1/1)");
-    const mqSquareHi = window.matchMedia("(max-aspect-ratio: 1/1)");
+    let lastInnerW = window.innerWidth;
 
     const compute = () => {
       const w = hostRef.current?.clientWidth ?? window.innerWidth;
-      const ar = (window.innerWidth || 1) / (window.innerHeight || 1); // aspect courant
-      const widthFit = w / designW; // scale desktop
+      const ar = (window.innerWidth || 1) / (window.innerHeight || 1);
 
-      // scale mobile basée sur "60% de l'écran" mais figée à VH₀
+      // Desktop: fit largeur
+      const widthFit = w / designW;
+      // Mobile “tall”: 60% de la hauteur figée au montage
       const mobileFit = (Math.max(1, vh0Ref.current) * 0.60) / designH;
 
-      // interpolation douce autour de 1:1 pour éviter le jump
+      // interpolation douce autour de 1:1
       let target: number;
       if (ar > 1.05) {
-        // Desktop “paysage”
         target = widthFit;
       } else if (ar < 0.95) {
-        // Mobile “tall”
         target = mobileFit;
       } else {
-        // Zone ~1:1 → moyenne pondérée entre desktop et mobile
         const t = (ar - 0.95) / (1.05 - 0.95); // 0..1
         target = mobileFit * (1 - t) + widthFit * t;
       }
 
-      // clamp de sécurité
       const s = Math.max(0.1, Math.min(3, target));
-      setScale(s);
+      setScale((prev) => (Math.abs(prev - s) > 1e-4 ? s : prev));
     };
 
-    const ro = new ResizeObserver(() => {
-      // On ne recalcule que si la largeur change vraiment (évite recompute en scroll mobile)
-      compute();
+    // Observe la largeur du host seulement
+    const ro = new ResizeObserver((entries) => {
+      const w = Math.round(entries[0]?.contentRect.width || 0);
+      if (w > 0) compute();
     });
-
     const el = hostRef.current;
     if (el) ro.observe(el);
 
-    // On suit surtout les changements d’orientation; le resize “scroll” est ignoré par ro si width stable
-    window.addEventListener("orientationchange", compute);
-    window.addEventListener("resize", compute, { passive: true });
+    const onOrientation = () => {
+      compute();
+      lastInnerW = window.innerWidth;
+    };
+    // Sur resize global, ignorer si seule la hauteur bouge (barre URL)
+    const onResizeWidthOnly = () => {
+      const w = window.innerWidth;
+      if (Math.abs(w - lastInnerW) >= 1) {
+        lastInnerW = w;
+        compute();
+      }
+    };
 
     compute();
+    window.addEventListener("orientationchange", onOrientation);
+    window.addEventListener("resize", onResizeWidthOnly, { passive: true });
 
     return () => {
       ro.disconnect();
-      window.removeEventListener("orientationchange", compute);
-      window.removeEventListener("resize", compute);
+      window.removeEventListener("orientationchange", onOrientation);
+      window.removeEventListener("resize", onResizeWidthOnly);
     };
   }, [designW, designH]);
 
@@ -115,12 +121,16 @@ export default function BookSpline({
   const upscale = 1 / pr;
 
   // === Décor : suit displayW, avec ratio selon bucket d’aspect ===
-  const ar = (typeof window !== "undefined")
-    ? (window.innerWidth || 1) / (window.innerHeight || 1)
-    : 1.2;
+  const ar =
+    typeof window !== "undefined"
+      ? (window.innerWidth || 1) / (window.innerHeight || 1)
+      : 1.2;
+
   const decorRatio =
-    ar > 1.05 ? decorWidthRatioDesktop
-      : ar < 0.95 ? decorWidthRatioMobile
+    ar > 1.05
+      ? decorWidthRatioDesktop
+      : ar < 0.95
+      ? decorWidthRatioMobile
       : decorWidthRatioSquare;
 
   const decorWidthPx = Math.min(
@@ -143,8 +153,8 @@ export default function BookSpline({
         ref={hostRef}
         className={[
           "relative z-0 flex justify-center pointer-events-none",
-          // hauteurs visuelles du “cadre” (ne pilotent pas la scale)
-          "h-[55svh] md:h-[76dvh] lg:h-[94dvh] w-full",
+          // ⬅️ stable heights using --vhpx utilities (no svh/dvh)
+          "h-55vhpx md:h-76vhpx lg:h-94vhpx w-full",
           "lg:[clip-path:inset(0_250px_0_250px)]",
         ].join(" ")}
         style={{
@@ -174,7 +184,7 @@ export default function BookSpline({
               style={{
                 width: `${decorWidthPx}px`,
                 height: "auto",
-                transform: `scale(${decorScale})`, // optionnel, constant
+                transform: `scale(${decorScale})`,
                 transformOrigin: "center",
                 objectFit: "contain",
                 objectPosition: "center",

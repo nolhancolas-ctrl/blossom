@@ -14,6 +14,26 @@
    ============================================================ */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
+html { overflow-anchor: none; }
+
+:root { --vhpx: 100vh; } /* desktop fallback */
+
+/* Stable vh utilities (use these instead of svh/dvh) */
+.h-55vhpx { height: calc(var(--vhpx) * 0.55); }
+.h-60vhpx { height: calc(var(--vhpx) * 0.60); }
+.h-70vhpx { height: calc(var(--vhpx) * 0.70); }
+.h-76vhpx { height: calc(var(--vhpx) * 0.76); }
+.h-90vhpx { height: calc(var(--vhpx) * 0.90); }
+.h-94vhpx { height: calc(var(--vhpx) * 0.94); }
+
+/* Responsive variants (mirror Tailwind breakpoints) */
+@media (min-width: 768px) { /* md */
+  .md\:h-76vhpx { height: calc(var(--vhpx) * 0.76); }
+}
+@media (min-width: 1024px) { /* lg */
+  .lg\:h-94vhpx { height: calc(var(--vhpx) * 0.94); }
+}
+
 html, body { overscroll-behavior-y: none; }
 
 body {
