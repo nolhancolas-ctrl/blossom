@@ -278,3 +278,92 @@ p {
   80%  { opacity: 0.4; }
   100% { transform: translateX(150%); opacity: 0; }
 }
+
+/* ===== Splash overlay ===== */
+.splash-overlay {
+  position: fixed; inset: 0;
+  z-index: 9999;
+  display: grid; place-items: center;
+  pointer-events: auto;           /* bloque l'UI dessous */
+  background: rgba(248,245,241,0.75); /* beige très léger */
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transition: opacity 400ms ease;
+  opacity: 1;
+}
+.splash-overlay--fade {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Contenu centré */
+.splash-inner {
+  width: min(460px, 86vw);
+  display: grid; gap: 18px;
+  text-align: center;
+}
+
+/* Titre raffiné */
+.splash-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  font-size: clamp(1.25rem, 2.4vw + 0.6rem, 2rem);
+  color: #2f2f2f;
+  opacity: 0.9;
+}
+
+/* Barre conteneur */
+.splash-bar {
+  position: relative;
+  height: 8px;
+  border-radius: 9999px;
+  background: rgba(255,255,255,0.5);
+  border: 1px solid rgba(0,0,0,0.06);
+  overflow: hidden;
+  box-shadow:
+    inset 0 1px 2px rgba(0,0,0,0.06),
+    0 4px 14px rgba(0,0,0,0.05);
+}
+
+/* Remplissage (2s) */
+.splash-bar__fill {
+  position: absolute; inset: 0 auto 0 0;
+  width: 0%;
+  background: linear-gradient(180deg, rgba(0,0,0,0.75), rgba(0,0,0,0.85));
+  border-radius: inherit;
+  animation: splashFill 2s ease forwards;
+}
+
+/* Reflet doux qui défile (loop court et peu coûteux) */
+.splash-bar__shine {
+  position: absolute; top: -40%; bottom: -40%;
+  width: 24%;
+  left: -30%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.7), transparent);
+  filter: blur(6px);
+  opacity: 0.65;
+  animation: splashShine 1.2s linear infinite;
+}
+
+/* Animations */
+@keyframes splashFill {
+  0% { width: 0%; }
+  100% { width: 100%; }
+}
+@keyframes splashShine {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(500%); }
+}
+
+/* Respecte prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .splash-overlay { transition: opacity 1ms linear; }
+  .splash-bar__fill { animation: none; width: 100%; }
+  .splash-bar__shine { animation: none; opacity: 0; }
+}
+
+/* états du splash */
+.splash-overlay { opacity: 1; background: rgba(248,245,241,1); transition: opacity 400ms ease, background 400ms ease; }
+.splash-overlay--soft { background: rgba(248,245,241,0.78); } /* après 0.5s */
+.splash-overlay--fade { opacity: 0; pointer-events: none; }

@@ -1,7 +1,7 @@
-// app/layout.tsx
 import "./globals.css";
 import type { Metadata } from "next";
-import FooterOffWhite from "@/components/Footer";
+import SplashScreen from "@/components/SplashScreen";
+import Footer from "@/components/Footer";
 
 export const metadata: Metadata = {
   title: "Blossom – Le livre",
@@ -12,12 +12,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="fr">
       <body className="min-h-[100svh] antialiased">
-        {/* Contenu au-dessus du calque fixe (les pages gèrent le parallax) */}
+        {/* Splash 2s + fade (peu coûteux) */}
+        <SplashScreen durationMs={2000} />
+
+        {/* Contenu du site */}
         <div className="relative z-10 flex min-h-[100svh] flex-col overflow-x-hidden">
           <main className="flex-1">{children}</main>
-
-          {/* Footer sur fond blanc cassé (recouvre le parallax) */}
-          <FooterOffWhite />
+          <Footer />
         </div>
       </body>
     </html>

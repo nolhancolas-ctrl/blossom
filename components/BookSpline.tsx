@@ -1,14 +1,11 @@
 // components/BookSpline.tsx
 "use client";
-
 import { useEffect, useMemo, useRef, useState } from "react";
-
-type CSSLen = number | string;
 
 export type BookSplineProps = {
   /** URL Spline (ex: my.spline.design/...) */
   src: string;
-  /** Dimensions "design" (base de calcul) */
+  /** Dimensions “design” (base de calcul pour l’échelle par largeur) */
   designW?: number; // px
   designH?: number; // px
   /** Qualité de rendu WebGL (0.5..1) → réduit la résolution puis upscale CSS */
@@ -26,16 +23,16 @@ export type BookSplineProps = {
 };
 
 /**
- * BookSpline = Book3DInline + SplineAuto fusionnés.
- * - Garde la logique de scale de Book3DInline (fit largeur desktop / 60% vh mobile).
- * - Garde le pipeline de rendu de SplineAuto (renderScale + upscale CSS + décor flouté).
- * - API compacte, aucun dynamic import requis côté page.
+ * BookSpline
+ * - Scale **stable** basé uniquement sur la largeur (fit largeur).
+ * - Pipeline rendu : renderScale (WebGL) + upscale CSS (perf).
+ * - Le démarrage d'animation est géré **dans Spline** (ex: délai 2.5s).
  */
 export default function BookSpline({
   src,
   designW = 1200,
   designH = 700,
-  renderScale = 0.6,
+  renderScale = 0.9,
   className = "",
   style,
   interactive = false,
@@ -47,37 +44,29 @@ export default function BookSpline({
 }: BookSplineProps) {
   const embedUrl = useMemo(() => toEmbedUrl(src), [src]);
 
-  // === Scale identique à Book3DInline ===
+  // === Scale “width-only” (stable, pas de dépendance au vh mobile) ===
   const hostRef = useRef<HTMLDivElement | null>(null);
   const [scale, setScale] = useState(1);
-
   useEffect(() => {
     const compute = () => {
       const w = hostRef.current?.clientWidth ?? window.innerWidth;
-      const vh = window.innerHeight || 0;
-      const isMobile = window.matchMedia("(max-width: 768px)").matches;
       const fitByW = w / designW;
-      const fitByH = (vh * 0.6) / designH; // 60% d'écran en mobile (inchangé)
-      setScale(isMobile ? Math.max(0.1, fitByH) : Math.max(0.1, fitByW));
+      setScale(Math.max(0.1, fitByW));
     };
-
     const ro = new ResizeObserver(compute);
     const el = hostRef.current;
     if (el) ro.observe(el);
-
     window.addEventListener("resize", compute, { passive: true });
     compute();
-
     return () => {
       ro.disconnect();
       window.removeEventListener("resize", compute);
     };
-  }, [designW, designH]);
+  }, [designW]);
 
-  // === Calculs de SplineAuto (display vs render + upscale) ===
+  // === Dimensions “affichées” vs “rendues” (WebGL) ===
   const displayW = Math.max(1, Math.round(designW * scale));
   const displayH = Math.max(1, Math.round(designH * scale));
-
   const pr = Math.max(0.5, Math.min(1, renderScale || 1)); // borne 0.5..1
   const renderW = Math.max(1, Math.round(displayW * pr));
   const renderH = Math.max(1, Math.round(displayH * pr));
@@ -98,7 +87,7 @@ export default function BookSpline({
         ref={hostRef}
         className={[
           "relative z-0 flex justify-center pointer-events-none",
-          // mêmes hauteurs/clip que Book3DInline
+          // même gabarit visuel/clip qu’avant
           "h-[55svh] md:h-[76dvh] lg:h-[94dvh] w-full",
           "lg:[clip-path:inset(0_250px_0_250px)]",
         ].join(" ")}
@@ -110,7 +99,7 @@ export default function BookSpline({
           backfaceVisibility: "hidden",
         }}
       >
-        {/* === Décor fusionné (identique à SplineAuto) === */}
+        {/* === Décor flouté optionnel === */}
         {decorSrc && (
           <div
             aria-hidden
@@ -147,10 +136,10 @@ export default function BookSpline({
           style={{
             position: "absolute",
             top: 0,
-            left: "50.8%", // respecte le léger offset de SplineAuto
+            left: "50.8%", // léger offset conservé
             transform: `translateX(-50%) scale(${upscale})`,
             transformOrigin: "top center",
-            width: `${renderW}px`, // rendu WebGL "réduit"
+            width: `${renderW}px`,  // rendu WebGL réduit
             height: `${renderH}px`,
             pointerEvents: interactive ? "auto" : "none",
             willChange: "transform",
@@ -158,7 +147,7 @@ export default function BookSpline({
           }}
         >
           <iframe
-            src={embedUrl}
+            src={embedUrl} // ← charge tout de suite
             title="Spline 3D"
             style={{
               width: "100%",
@@ -167,7 +156,7 @@ export default function BookSpline({
               display: "block",
               pointerEvents: interactive ? "auto" : "none",
             }}
-            loading="lazy"
+            loading="eager"
             allow="autoplay; fullscreen; xr-spatial-tracking; clipboard-read; clipboard-write"
             allowFullScreen
             referrerPolicy="no-referrer-when-downgrade"
@@ -183,7 +172,7 @@ function toEmbedUrl(u: string) {
   try {
     const url = new URL(u);
     if (!url.searchParams.has("ui")) url.searchParams.set("ui", "0");
-    if (!url.searchParams.has("autostart")) url.searchParams.set("autostart", "1");
+    if (!url.searchParams.has("autostart")) url.searchParams.set("autostart", "1"); // l’animation démarre, mais tu ajoutes 2.5s de délai DANS Spline
     if (!url.searchParams.has("transparent")) url.searchParams.set("transparent", "1");
     return url.toString();
   } catch {
