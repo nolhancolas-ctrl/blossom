@@ -13,7 +13,6 @@ type PosterSectionProps = {
 export default function PosterSection({
   leftSrc,
   rightSrc,
-  title = "If you cannot take care of a plant, print one :)",
   ctaHref = "/posters",
   className = "",
   interactive = false,
@@ -24,11 +23,8 @@ export default function PosterSection({
       aria-labelledby="poster-section-title"
     >
       {/* === Titre === */}
-      <h2
-        id="poster-section-title"
-        className="text-center text-lg sm:text-xl md:text-2xl font-medium tracking-tight text-slate-800"
-      >
-        {title}
+      <h2 className="text-3xl md:text-4xl font-medium tracking-tight text-slate-800 mb-6 text-center">
+        If you cannot take care of a plant, print one :)
       </h2>
 
       {/* === Grille des deux affiches === */}

@@ -206,11 +206,6 @@ return (
           </div>
         </div>
       </div>
-
-      {/* Texte sous le compteur */}
-      <p className="mt-3 text-sm text-slate-700 text-center">
-        {diff > 0 ? "Temps restant avant le lancement" : "C’est l’heure !"}
-      </p>
     </div>
 
     {/* Halo pastel discret */}

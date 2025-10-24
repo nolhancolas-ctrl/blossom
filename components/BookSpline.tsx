@@ -3,31 +3,23 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 export type BookSplineProps = {
-  /** URL Spline (ex: my.spline.design/...) */
   src: string;
-  /** Dimensions “design” (base de calcul pour l’échelle par largeur) */
-  designW?: number; // px
-  designH?: number; // px
-  /** Qualité de rendu WebGL (0.5..1) → réduit la résolution puis upscale CSS */
-  renderScale?: number;
-  /** Apparence & comportement */
+  designW?: number;
+  designH?: number;
+  renderScale?: number; // 0.5..1 (résolution WebGL)
   className?: string;
   style?: React.CSSProperties;
   interactive?: boolean;
-  /** Décor (image unique floutée) */
   decorSrc?: string;
-  decorScale?: number;
+  decorScale?: number;        // multiplicateur visuel (optionnel)
   decorBlurPx?: number;
-  decorMaxSizeVmin?: number;
-  decorMaxSizePx?: number;
+  decorMaxSizePx?: number;    // plafond absolu du décor
+  /** Largeur du décor = ratio * displayW (selon bucket d’aspect) */
+  decorWidthRatioDesktop?: number; // défaut 0.55
+  decorWidthRatioSquare?: number;  // défaut 0.70 (≈ moyenne)
+  decorWidthRatioMobile?: number;  // défaut 0.95 (plus généreux)
 };
 
-/**
- * BookSpline
- * - Scale **stable** basé uniquement sur la largeur (fit largeur).
- * - Pipeline rendu : renderScale (WebGL) + upscale CSS (perf).
- * - Le démarrage d'animation est géré **dans Spline** (ex: délai 2.5s).
- */
 export default function BookSpline({
   src,
   designW = 1200,
@@ -37,40 +29,104 @@ export default function BookSpline({
   style,
   interactive = false,
   decorSrc,
-  decorScale = 1.4,
+  decorScale = 1.0,
   decorBlurPx = 0.2,
-  decorMaxSizeVmin = 90,
   decorMaxSizePx = 1200,
+  decorWidthRatioDesktop = 0.55,
+  decorWidthRatioSquare = 0.70,
+  decorWidthRatioMobile = 0.95,
 }: BookSplineProps) {
   const embedUrl = useMemo(() => toEmbedUrl(src), [src]);
 
-  // === Scale “width-only” (stable, pas de dépendance au vh mobile) ===
   const hostRef = useRef<HTMLDivElement | null>(null);
+
+  /** scale unique pour tout le composant (livre + décor) */
   const [scale, setScale] = useState(1);
+
+  // On capture une seule fois la "small viewport height" approximative (VH₀)
+  const vh0Ref = useRef<number>(0);
   useEffect(() => {
+    if (!vh0Ref.current) {
+      // On capture la hauteur dispo au montage et on ne la re-touche plus (évite le wobble mobile)
+      vh0Ref.current = window.innerHeight || 0;
+    }
+  }, []);
+
+  useEffect(() => {
+    // Buckets d’aspect : desktop (>1), square (~1), mobile tall (≤1)
+    const mqSquareLo = window.matchMedia("(min-aspect-ratio: 1/1)");
+    const mqSquareHi = window.matchMedia("(max-aspect-ratio: 1/1)");
+
     const compute = () => {
       const w = hostRef.current?.clientWidth ?? window.innerWidth;
-      const fitByW = w / designW;
-      setScale(Math.max(0.1, fitByW));
+      const ar = (window.innerWidth || 1) / (window.innerHeight || 1); // aspect courant
+      const widthFit = w / designW; // scale desktop
+
+      // scale mobile basée sur "60% de l'écran" mais figée à VH₀
+      const mobileFit = (Math.max(1, vh0Ref.current) * 0.60) / designH;
+
+      // interpolation douce autour de 1:1 pour éviter le jump
+      let target: number;
+      if (ar > 1.05) {
+        // Desktop “paysage”
+        target = widthFit;
+      } else if (ar < 0.95) {
+        // Mobile “tall”
+        target = mobileFit;
+      } else {
+        // Zone ~1:1 → moyenne pondérée entre desktop et mobile
+        const t = (ar - 0.95) / (1.05 - 0.95); // 0..1
+        target = mobileFit * (1 - t) + widthFit * t;
+      }
+
+      // clamp de sécurité
+      const s = Math.max(0.1, Math.min(3, target));
+      setScale(s);
     };
-    const ro = new ResizeObserver(compute);
+
+    const ro = new ResizeObserver(() => {
+      // On ne recalcule que si la largeur change vraiment (évite recompute en scroll mobile)
+      compute();
+    });
+
     const el = hostRef.current;
     if (el) ro.observe(el);
+
+    // On suit surtout les changements d’orientation; le resize “scroll” est ignoré par ro si width stable
+    window.addEventListener("orientationchange", compute);
     window.addEventListener("resize", compute, { passive: true });
+
     compute();
+
     return () => {
       ro.disconnect();
+      window.removeEventListener("orientationchange", compute);
       window.removeEventListener("resize", compute);
     };
-  }, [designW]);
+  }, [designW, designH]);
 
-  // === Dimensions “affichées” vs “rendues” (WebGL) ===
+  // === Dimensions affichées (livre) vs rendues (WebGL) ===
   const displayW = Math.max(1, Math.round(designW * scale));
   const displayH = Math.max(1, Math.round(designH * scale));
-  const pr = Math.max(0.5, Math.min(1, renderScale || 1)); // borne 0.5..1
+
+  const pr = Math.max(0.5, Math.min(1, renderScale || 1));
   const renderW = Math.max(1, Math.round(displayW * pr));
   const renderH = Math.max(1, Math.round(displayH * pr));
-  const upscale = 1 / pr; // ex. 0.8 → 1.25
+  const upscale = 1 / pr;
+
+  // === Décor : suit displayW, avec ratio selon bucket d’aspect ===
+  const ar = (typeof window !== "undefined")
+    ? (window.innerWidth || 1) / (window.innerHeight || 1)
+    : 1.2;
+  const decorRatio =
+    ar > 1.05 ? decorWidthRatioDesktop
+      : ar < 0.95 ? decorWidthRatioMobile
+      : decorWidthRatioSquare;
+
+  const decorWidthPx = Math.min(
+    decorMaxSizePx,
+    Math.max(180, Math.round(displayW * decorRatio))
+  );
 
   return (
     <section
@@ -87,7 +143,7 @@ export default function BookSpline({
         ref={hostRef}
         className={[
           "relative z-0 flex justify-center pointer-events-none",
-          // même gabarit visuel/clip qu’avant
+          // hauteurs visuelles du “cadre” (ne pilotent pas la scale)
           "h-[55svh] md:h-[76dvh] lg:h-[94dvh] w-full",
           "lg:[clip-path:inset(0_250px_0_250px)]",
         ].join(" ")}
@@ -99,7 +155,7 @@ export default function BookSpline({
           backfaceVisibility: "hidden",
         }}
       >
-        {/* === Décor flouté optionnel === */}
+        {/* === Décor stabilisé (suit la même scale que le livre) === */}
         {decorSrc && (
           <div
             aria-hidden
@@ -116,12 +172,12 @@ export default function BookSpline({
               src={decorSrc}
               alt="Décor doré Blossom"
               style={{
-                transform: `scale(${decorScale})`,
+                width: `${decorWidthPx}px`,
+                height: "auto",
+                transform: `scale(${decorScale})`, // optionnel, constant
                 transformOrigin: "center",
                 objectFit: "contain",
                 objectPosition: "center",
-                maxWidth: `min(${decorMaxSizeVmin}vmin, ${decorMaxSizePx}px)`,
-                maxHeight: `min(${decorMaxSizeVmin}vmin, ${decorMaxSizePx}px)`,
                 filter: `blur(${decorBlurPx}px)`,
                 opacity: 0.9,
                 position: "relative",
@@ -136,10 +192,10 @@ export default function BookSpline({
           style={{
             position: "absolute",
             top: 0,
-            left: "50.8%", // léger offset conservé
+            left: "50.8%",
             transform: `translateX(-50%) scale(${upscale})`,
             transformOrigin: "top center",
-            width: `${renderW}px`,  // rendu WebGL réduit
+            width: `${renderW}px`,
             height: `${renderH}px`,
             pointerEvents: interactive ? "auto" : "none",
             willChange: "transform",
@@ -147,7 +203,7 @@ export default function BookSpline({
           }}
         >
           <iframe
-            src={embedUrl} // ← charge tout de suite
+            src={embedUrl}
             title="Spline 3D"
             style={{
               width: "100%",
@@ -167,12 +223,11 @@ export default function BookSpline({
   );
 }
 
-/** Normalise l’URL Spline et injecte des paramètres utiles si absents */
 function toEmbedUrl(u: string) {
   try {
     const url = new URL(u);
     if (!url.searchParams.has("ui")) url.searchParams.set("ui", "0");
-    if (!url.searchParams.has("autostart")) url.searchParams.set("autostart", "1"); // l’animation démarre, mais tu ajoutes 2.5s de délai DANS Spline
+    if (!url.searchParams.has("autostart")) url.searchParams.set("autostart", "1");
     if (!url.searchParams.has("transparent")) url.searchParams.set("transparent", "1");
     return url.toString();
   } catch {

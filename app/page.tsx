@@ -69,7 +69,6 @@ export default function Home() {
 
         {/* === COMPTEUR === */}
         <section className="site-section text-center">
-          <h2>Countdown</h2>
           <div className="grid place-items-center mt-4">
             <Countdown3D target={launch} size="lg" />
           </div>
