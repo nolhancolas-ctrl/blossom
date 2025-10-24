@@ -48,7 +48,7 @@ export default function Book3DInline() {
         ref={hostRef}
         className="relative z-0 flex justify-center pointer-events-none
                     h-[55svh] md:h-[76dvh] lg:h-[94dvh] w-full
-                    lg:[clip-path:inset(0_200px_0_200px)]"
+                    lg:[clip-path:inset(0_250px_0_250px)]"
         >
 <SplineAuto
   src="https://my.spline.design/blossombookanimated-RABoYJaWjZ6evsgSlU4VgfI4/"

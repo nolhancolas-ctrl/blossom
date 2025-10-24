@@ -11,20 +11,20 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr" suppressHydrationWarning>
-      {/* Papier = fallback si l'image tarde */}
-      <body className="bg-[#f8f5f1] min-h-[100svh] antialiased">
-        {/* FOND PARALLAX (non 'background-attachment: fixed') */}
-        <ParallaxBg src="/blossom_background.jpg" />
+    <html lang="fr">
+      <body className="min-h-[100svh] antialiased">
+        {/* Fond parallax (auto small/big) */}
+        <ParallaxBg />
 
-        {/* CONTENU */}
+        {/* Contenu */}
         <div className="relative z-10 flex min-h-[100svh] flex-col overflow-x-hidden">
-          {/* <Header /> si besoin */}
+          {/* Main */}
           <main className="flex-1">{children}</main>
-          <FooterSketch
-            bgUrl="/blossom_background.jpg"
-            email="hello@blossom.example"
-          />
+
+          {/* Footer marqué pour la fin du parallax */}
+          <footer data-site-footer>
+            <FooterSketch bgUrl="/background_big.jpg" email="hello@blossom.example" />
+          </footer>
         </div>
       </body>
     </html>

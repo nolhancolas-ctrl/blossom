@@ -38,6 +38,7 @@ type Props = {
 };
 
 export default function SplineAuto({
+
   src,
   designW = 1200,
   designH = 700,
@@ -57,7 +58,7 @@ export default function SplineAuto({
   interactive = false,
 
   decorSrc,
-  decorScale = 1.6,
+  decorScale = 1.4,
   decorBlurPx = 0.2,         // flou global (fusion)
   decorMaxSizeVmin = 90,
   decorMaxSizePx = 1200,

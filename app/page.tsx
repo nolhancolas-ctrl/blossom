@@ -15,7 +15,7 @@ export default function Home() {
       {/* === SECTION HEADER === */}
       <section>
         {/* Header large (desktop) */}
-        <header className="hidden sm:block w-screen overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.15)]">
+        <header className="data-site-header hidden sm:block w-screen overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.15)]">
           <Image
             src="/header_wide.jpg"
             alt="Blossom header wide"
@@ -26,7 +26,7 @@ export default function Home() {
           />
         </header>
         {/* Header mobile */}
-        <header className="block sm:hidden w-screen overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.15)]">
+        <header className="data-site-header block sm:hidden w-screen overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.15)]">
           <Image
             src="/header_small.jpg"
             alt="Blossom header small"
