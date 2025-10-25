@@ -4,7 +4,7 @@ export default function MailingSection() {
   return (
     <section
       id="mailing-section"
-      className="relative flex items-center justify-center px-6 sm:px-8 py-16 sm:py-24 mt-16 sm:mt-24 mb-16 sm:mb-24"
+      className="relative flex items-center justify-center px-14 sm:px-10 py-16 sm:py-24 mt-16 sm:mt-24 mb-16 sm:mb-24"
     >
       <div
         className={`
@@ -41,16 +41,29 @@ export default function MailingSection() {
             placeholder="your@email.com"
             className={`
               glass-button-text
-              flex-1 h-14
-              bg-white/60 md:bg-white/40
-              text-slate-800 placeholder-slate-500
-              px-5 rounded-lg md:rounded-xl
-              border border-slate-300/50
-              focus:outline-none focus:ring-2 focus:ring-slate-400/40
+              flex-1 h-14 px-5 rounded-lg md:rounded-xl
+
+              /* 🌸 fond un peu plus opaque pour toujours bien contraster */
+              bg-white/98 md:bg-white/85
+              backdrop-blur-md md:backdrop-blur-xl backdrop-saturate-150
+
+              /* 🌼 bords blancs nets et permanents */
+              border border-white/75 md:border-white/65
+              ring-1 ring-white/55 md:ring-white/45
+
+              /* ☀️ douce lueur interne + légère ombre externe */
+              shadow-[inset_0_1px_1px_rgba(255,255,255,0.65),0_2px_8px_rgba(0,0,0,0.08)]
+
+              /* ✍️ texte et placeholder bien lisibles */
+              text-slate-900 placeholder-slate-500
+
+              /* 💫 interactions premium */
+              focus:outline-none focus:ring-2 focus:ring-white/90
               transition-all duration-300
+              hover:bg-white hover:shadow-[inset_0_1px_2px_rgba(255,255,255,0.85),0_4px_14px_rgba(0,0,0,0.12)]
             `}
           />
-
+          
           {/* Bouton d’action (noir + shine) */}
           <button
             type="submit"

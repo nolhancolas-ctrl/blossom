@@ -47,11 +47,11 @@ a { color: inherit; text-decoration: none; }
    3) Layout Rhythm — Sections spacing
    - Mobile : espacement réduit (~ -2/3)
    ============================================================ */
-.site-section { padding-block: clamp(1.25rem, 3.5vw, 3rem); }
-.site-section + .site-section { margin-top: clamp(1rem, 3vw, 2.5rem); }
+.site-section { padding-block: clamp(0rem, 2vw, 1.5rem); }
+.site-section + .site-section { margin-top: clamp(0rem, 1vw, .5rem); }
 @media (max-width: 640px) {
-  .site-section { padding-block: clamp(0.4rem, 1.2vw, 1rem); }
-  .site-section + .site-section { margin-top: clamp(0.4rem, 1.2vw, 0.9rem); }
+  .site-section { padding-block: clamp(0rem, 1.2vw, 1rem); }
+  .site-section + .site-section { margin-top: clamp(-6rem, 1.2vw, 0.9rem); }
 }
 /* Header collé en haut (pas de padding/marge) */
 .site-header-section { padding-block: 0 !important; margin-top: 0 !important; }
@@ -233,6 +233,19 @@ p {
 /* Bloque le scroll tant que le splash est visible (renforce l’inline) */
 .splash-lock { overflow: hidden !important; height: 100% !important; }
 
+/* ==== Splash hard lock (works on iOS/Android/desktop) ==== */
+html.splash-lock,
+body.splash-lock {
+  overflow: hidden !important;
+  height: 100% !important;
+}
+
+body.splash-fixed {
+  position: fixed !important;
+  width: 100% !important;
+  top: var(--splash-top, 0px) !important; /* set dynamically */
+}
+
 /* ============================================================
    9) Mobile-only section clamps (fine-tuning on small screens)
    ============================================================ */
@@ -260,4 +273,12 @@ p {
     --m-pt-pct: 6; --m-pb-pct: 6; --m-mt-pct: 8;
     --m-pt-max: 56px; --m-pb-max: 56px; --m-mt-max: 64px;
   }
+}
+
+/* ============================================================
+   10) Harmonisation des espacements de page
+   ============================================================ */
+/* Extra breathing room before the footer */
+.page-main :is(section,.site-section):last-of-type {
+  margin-bottom: clamp(4rem, 8vw, 8rem) !important;
 }

@@ -25,7 +25,7 @@ export default function Home() {
     };
   }, []);
 
-  const launch = "2026-26-03T10:00:00+09:00";
+  const launch = "2026-03-26T10:00:00+09:00";
 
   return (
     <>
@@ -72,9 +72,9 @@ export default function Home() {
             <BookSpline
               src="https://my.spline.design/blossombookanimated-RABoYJaWjZ6evsgSlU4VgfI4/"
               decorSrc="/dorure.webp"
-              designW={1200}
-              designH={700}
-              renderScale={1}
+              desktopScalePct={0.55}
+              maxScaleDesktop={0.68}
+              maxScaleMobile={0.85}
             />
           )}
         </section>
