@@ -387,3 +387,9 @@ p {
 .splash-overlay { opacity: 1; background: rgba(248,245,241,1); transition: opacity 400ms ease, background 400ms ease; }
 .splash-overlay--soft { background: rgba(248,245,241,0.78); } /* après 0.5s */
 .splash-overlay--fade { opacity: 0; pointer-events: none; }
+
+/* Bloque absolument tout scroll quand le splash est actif (renforce l’inline style) */
+.splash-lock {
+  overflow: hidden !important;
+  height: 100% !important;
+}

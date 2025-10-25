@@ -202,7 +202,7 @@ export default function BookSpline({
           style={{
             position: "absolute",
             top: 0,
-            left: "50.8%",
+            left: "47.82%",
             transform: `translateX(-50%) scale(${upscale})`,
             transformOrigin: "top center",
             width: `${renderW}px`,
