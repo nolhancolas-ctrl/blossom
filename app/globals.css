@@ -1,8 +1,8 @@
 /* ============================================================
-   🌸 BLOSSOM — Global Stylesheet
+   🌸 BLOSSOM — Global Stylesheet (clean & optimized)
    ============================================================ */
 
-/* === Imports (fonts + Tailwind) === */
+/* === Imports (Fonts + Tailwind) === */
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap');
 @import "tailwindcss/base";
@@ -13,29 +13,8 @@
    1) Base & Reset
    ============================================================ */
 * { margin: 0; padding: 0; box-sizing: border-box; }
-
 html { overflow-anchor: none; }
-
-:root { --vhpx: 100vh; } /* desktop fallback */
-
-/* Stable vh utilities (use these instead of svh/dvh) */
-.h-55vhpx { height: calc(var(--vhpx) * 0.55); }
-.h-60vhpx { height: calc(var(--vhpx) * 0.60); }
-.h-70vhpx { height: calc(var(--vhpx) * 0.70); }
-.h-76vhpx { height: calc(var(--vhpx) * 0.76); }
-.h-90vhpx { height: calc(var(--vhpx) * 0.90); }
-.h-94vhpx { height: calc(var(--vhpx) * 0.94); }
-
-/* Responsive variants (mirror Tailwind breakpoints) */
-@media (min-width: 768px) { /* md */
-  .md\:h-76vhpx { height: calc(var(--vhpx) * 0.76); }
-}
-@media (min-width: 1024px) { /* lg */
-  .lg\:h-94vhpx { height: calc(var(--vhpx) * 0.94); }
-}
-
 html, body { overscroll-behavior-y: none; }
-
 body {
   font-family: 'Cormorant Garamond', serif;
   background-color: #f8f5f1;
@@ -43,10 +22,7 @@ body {
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
-
 a { color: inherit; text-decoration: none; }
-
-/* Focus visible for accessibility */
 :focus-visible {
   outline: 2px solid rgba(15, 23, 42, 0.35);
   outline-offset: 2px;
@@ -54,36 +30,34 @@ a { color: inherit; text-decoration: none; }
 }
 
 /* ============================================================
-   🧭 Layout Rhythm – Sections spacing (refined)
+   2) Stable Viewport Height (avoid mobile URL-bar wobble)
+   - Set from JS once: document.documentElement.style.setProperty('--vhpx', `${window.innerHeight}px`)
    ============================================================ */
-.site-section {
-  /* Réduction du padding interne : plus dense mais toujours respirant */
-  padding-block: clamp(0rem, 0.5rem, 0.5px);
-}
-
-/* Espacement entre les sections : réduit aussi */
-.site-section + .site-section {
-  margin-top: clamp(0.5rem, 0.5vw, 0.5rem);
-}
-
-/* Mobile : encore plus compact */
-@media (max-width: 640px) {
-  .site-section {
-    padding-block: 1rem; /* avant : 2rem */
-  }
-  .site-section + .site-section {
-    margin-top: 1.5rem; /* avant : 2.5rem */
-  }
-}
-
-/* Header section must be glued to the top (no padding) */
-.site-section.site-header-section {
-  padding-block: 0 !important;
-  margin-top: 0 !important;
-}
+:root { --vhpx: 100vh; } /* desktop fallback */
+.h-55vhpx { height: calc(var(--vhpx) * 0.55); }
+.h-60vhpx { height: calc(var(--vhpx) * 0.60); }
+.h-70vhpx { height: calc(var(--vhpx) * 0.70); }
+.h-76vhpx { height: calc(var(--vhpx) * 0.76); }
+.h-90vhpx { height: calc(var(--vhpx) * 0.90); }
+.h-94vhpx { height: calc(var(--vhpx) * 0.94); }
+@media (min-width: 768px)  { .md\:h-76vhpx { height: calc(var(--vhpx) * 0.76); } }
+@media (min-width: 1024px) { .lg\:h-94vhpx { height: calc(var(--vhpx) * 0.94); } }
 
 /* ============================================================
-   3) Typography — Titles & Body
+   3) Layout Rhythm — Sections spacing
+   - Mobile : espacement réduit (~ -2/3)
+   ============================================================ */
+.site-section { padding-block: clamp(1.25rem, 3.5vw, 3rem); }
+.site-section + .site-section { margin-top: clamp(1rem, 3vw, 2.5rem); }
+@media (max-width: 640px) {
+  .site-section { padding-block: clamp(0.4rem, 1.2vw, 1rem); }
+  .site-section + .site-section { margin-top: clamp(0.4rem, 1.2vw, 0.9rem); }
+}
+/* Header collé en haut (pas de padding/marge) */
+.site-header-section { padding-block: 0 !important; margin-top: 0 !important; }
+
+/* ============================================================
+   4) Typography — Titles & Body
    ============================================================ */
 h1, h2, h3, h4 {
   font-family: 'Cormorant Garamond', serif;
@@ -92,13 +66,10 @@ h1, h2, h3, h4 {
   line-height: 1.2;
   margin-bottom: 0.6em;
 }
-
-/* Scales grow on laptop/desktop, compact on mobile */
 h1 { font-size: clamp(2.5rem, 4vw + 1rem, 4.5rem); letter-spacing: 0.01em; }
 h2 { font-size: clamp(2rem, 3vw + 0.8rem, 3.2rem); }
 h3 { font-size: clamp(1.5rem, 2vw + 0.5rem, 2.3rem); }
 h4 { font-size: clamp(1.25rem, 1.5vw + 0.4rem, 1.8rem); }
-
 p {
   font-family: 'Inter', system-ui, sans-serif;
   color: rgba(47, 47, 47, 0.85);
@@ -110,7 +81,7 @@ p {
 }
 
 /* ============================================================
-   4) Counter Responsive Scaling (existing behavior)
+   5) Counter Responsive Scaling (existing behavior)
    ============================================================ */
 .counter-scale { --counter-scale: 1; }
 @media (max-aspect-ratio: 1/1) { .counter-scale { --counter-scale: 0.92; } }
@@ -118,10 +89,9 @@ p {
 @media (max-width: 380px)      { .counter-scale { --counter-scale: 0.54; } }
 
 /* ============================================================
-   5) Apple Glass Buttons — Text & Variants
+   6) Apple Glass Buttons — Base + Variants
    ============================================================ */
-
-/* 5.1 — Text style for UI inside glass buttons/inputs */
+/* 6.1 — Texte interne (inputs/boutons) */
 .glass-button-text {
   font-family: 'Inter', 'SF Pro Text', system-ui, sans-serif;
   font-weight: 400;
@@ -131,8 +101,6 @@ p {
   line-height: 1.2;
   transition: all 0.4s ease;
   font-size: clamp(0.9rem, 1vw + 0.35rem, 1.05rem);
-
-  /* ensure true transparency for inputs/buttons */
   background: transparent !important;
   border: none;
   outline: none;
@@ -141,156 +109,74 @@ p {
 .glass-button-text:focus { outline: none; box-shadow: none; }
 .glass-button-text::placeholder { color: rgba(0, 0, 0, 0.45); }
 
-/* 5.2 — Rectangular Apple-style glass button/input */
-.glass-button {
+/* 6.2 — Base commune */
+.glass-button,
+.glass-button-circle {
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center; /* keep centered by default */
-  gap: 1rem;
-
+  display: flex; align-items: center; justify-content: center; gap: 1rem;
   border-radius: 9999px;
   border: 1px solid rgba(255, 255, 255, 0.3);
   background: rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-
-  padding: 0.75rem 2rem;
-  width: auto;           /* width controlled in components */
-  max-width: none;
-
-  color: #000;
-  font-size: 1rem;
-  font-weight: 400;
-  letter-spacing: 0.01em;
-  text-align: center;
-
-  /* Softer shadows for premium glass feel */
-  box-shadow:
-    inset 0 0.5px 0 rgba(255, 255, 255, 0.2),
-    0 0 6px rgba(0, 0, 0, 0.08);
-
+  color: #000; font-size: 1rem; font-weight: 400; letter-spacing: 0.01em; text-align: center;
+  box-shadow: inset 0 0.5px 0 rgba(255, 255, 255, 0.2), 0 0 6px rgba(0, 0, 0, 0.08);
   transition: all 0.6s ease;
   overflow: hidden;
 }
+/* Reflection line (commune) */
+.glass-button::before,
+.glass-button-circle::before {
+  content: "";
+  position: absolute; top: 0; left: -60%;
+  width: 220%; height: 100%;
+  background: linear-gradient(to right, transparent, rgba(255,255,255,0.45), transparent);
+  opacity: 0.45; animation: reflection 6s linear infinite; pointer-events: none;
+}
+/* Inner glow (commune) */
+.glass-button::after,
+.glass-button-circle::after {
+  content: "";
+  position: absolute; inset: 0; border-radius: inherit;
+  background: rgba(255, 255, 255, 0.28);
+  filter: blur(10px); opacity: 0.22;
+  transition: opacity 0.5s ease, filter 0.5s ease;
+}
+.glass-button:hover::after,
+.glass-button-circle:hover::after { opacity: 0.4; filter: blur(12px); }
 
-/* Hover / Active */
+/* 6.3 — Variante rectangulaire (largeur contrôlée dans les composants) */
+.glass-button { padding: 0.75rem 2rem; width: auto; max-width: none; }
 .glass-button:hover {
   transform: scale(1.03);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.45),
-    0 0 18px rgba(255, 255, 255, 0.22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 0 18px rgba(255, 255, 255, 0.22);
   background: rgba(255, 255, 255, 0.3);
 }
 .glass-button:active {
   transform: scale(0.97);
-  box-shadow:
-    inset 0 1px 2px rgba(255, 255, 255, 0.55),
-    0 0 12px rgba(255, 255, 255, 0.15);
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.55), 0 0 12px rgba(255, 255, 255, 0.15);
 }
 
-/* Moving reflection line (subtle) */
-.glass-button::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: -60%;
-  width: 220%;
-  height: 100%;
-  background: linear-gradient(to right, transparent, rgba(255,255,255,0.45), transparent);
-  opacity: 0.45;
-  animation: reflection 6s linear infinite;
-  pointer-events: none;
-}
-
-/* Inner glow */
-.glass-button::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: rgba(255, 255, 255, 0.28);
-  filter: blur(10px);
-  opacity: 0.22;
-  transition: opacity 0.5s ease, filter 0.5s ease;
-}
-.glass-button:hover::after { opacity: 0.4; filter: blur(12px); }
-
-/* 5.3 — Circular variant (play/submit) */
-.glass-button-circle {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  aspect-ratio: 1 / 1;
-  height: 3.25rem;                 /* match input height via component if needed */
-  border-radius: 9999px;
-
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-
-  box-shadow:
-    inset 0 0.5px 0 rgba(255, 255, 255, 0.2),
-    0 0 6px rgba(0, 0, 0, 0.08);
-
-  transition: all 0.6s ease;
-  overflow: hidden;
-  cursor: pointer;
-}
-
+/* 6.4 — Variante circulaire (play/submit) */
+.glass-button-circle { aspect-ratio: 1 / 1; height: 3.25rem; cursor: pointer; }
 .glass-button-circle:hover {
   transform: scale(1.05);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.5),
-    0 0 22px rgba(255, 255, 255, 0.22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 0 22px rgba(255, 255, 255, 0.22);
   background: rgba(255, 255, 255, 0.3);
 }
 .glass-button-circle:active {
   transform: scale(0.97);
-  box-shadow:
-    inset 0 1px 2px rgba(255, 255, 255, 0.6),
-    0 0 12px rgba(255, 255, 255, 0.15);
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.6), 0 0 12px rgba(255, 255, 255, 0.15);
 }
-
-/* Moving reflection */
-.glass-button-circle::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: -60%;
-  width: 220%;
-  height: 100%;
-  background: linear-gradient(to right, transparent, rgba(255,255,255,0.45), transparent);
-  opacity: 0.45;
-  animation: reflection 6s linear infinite;
-  pointer-events: none;
-}
-
-/* Inner glow */
-.glass-button-circle::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: rgba(255, 255, 255, 0.26);
-  filter: blur(10px);
-  opacity: 0.22;
-  transition: opacity 0.5s ease, filter 0.5s ease;
-}
-.glass-button-circle:hover::after { opacity: 0.45; filter: blur(12px); }
 
 /* ============================================================
-   6) Animations — Reflection & Shine
+   7) Animations — Reflection & Shine
    ============================================================ */
 @keyframes reflection {
-  0%   { transform: translateX(-100%); }
+  0% { transform: translateX(-100%); }
   100% { transform: translateX(100%); }
 }
-
-/* Enhanced shining for black CTA buttons (Mailing) */
+/* Shining pour les CTA noirs (Mailing) */
 @keyframes buttonShine {
   0%   { transform: translateX(-120%); opacity: 0; }
   20%  { opacity: 0.7; }
@@ -299,97 +185,79 @@ p {
   100% { transform: translateX(150%); opacity: 0; }
 }
 
-/* ===== Splash overlay ===== */
+/* ============================================================
+   8) Splash Screen
+   ============================================================ */
 .splash-overlay {
-  position: fixed; inset: 0;
-  z-index: 9999;
+  position: fixed; inset: 0; z-index: 9999;
   display: grid; place-items: center;
-  pointer-events: auto;           /* bloque l'UI dessous */
-  background: rgba(248,245,241,0.75); /* beige très léger */
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  transition: opacity 400ms ease;
+  pointer-events: auto; /* bloque l'UI dessous */
+  background: rgba(248,245,241,1);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  transition: opacity 400ms ease, background 400ms ease;
   opacity: 1;
 }
-.splash-overlay--fade {
-  opacity: 0;
-  pointer-events: none;
-}
-
-/* Contenu centré */
-.splash-inner {
-  width: min(460px, 86vw);
-  display: grid; gap: 18px;
-  text-align: center;
-}
-
-/* Titre raffiné */
+.splash-overlay--soft { background: rgba(248,245,241,0.78); }
+.splash-overlay--fade { opacity: 0; pointer-events: none; }
+.splash-inner { width: min(460px, 86vw); display: grid; gap: 18px; text-align: center; }
 .splash-title {
-  font-family: 'Cormorant Garamond', serif;
-  font-weight: 500;
-  letter-spacing: 0.03em;
-  font-size: clamp(1.25rem, 2.4vw + 0.6rem, 2rem);
-  color: #2f2f2f;
-  opacity: 0.9;
+  font-family: 'Cormorant Garamond', serif; font-weight: 500; letter-spacing: 0.03em;
+  font-size: clamp(1.25rem, 2.4vw + 0.6rem, 2rem); color: #2f2f2f; opacity: 0.9;
 }
-
-/* Barre conteneur */
 .splash-bar {
-  position: relative;
-  height: 8px;
-  border-radius: 9999px;
-  background: rgba(255,255,255,0.5);
-  border: 1px solid rgba(0,0,0,0.06);
+  position: relative; height: 8px; border-radius: 9999px;
+  background: rgba(255,255,255,0.5); border: 1px solid rgba(0,0,0,0.06);
   overflow: hidden;
-  box-shadow:
-    inset 0 1px 2px rgba(0,0,0,0.06),
-    0 4px 14px rgba(0,0,0,0.05);
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.06), 0 4px 14px rgba(0,0,0,0.05);
 }
-
-/* Remplissage (2s) */
 .splash-bar__fill {
-  position: absolute; inset: 0 auto 0 0;
-  width: 0%;
+  position: absolute; inset: 0 auto 0 0; width: 0%;
   background: linear-gradient(180deg, rgba(0,0,0,0.75), rgba(0,0,0,0.85));
   border-radius: inherit;
-  animation: splashFill 2s ease forwards;
+  animation: splashFill 2s ease forwards; /* durée ajustée en inline si besoin */
 }
-
-/* Reflet doux qui défile (loop court et peu coûteux) */
 .splash-bar__shine {
-  position: absolute; top: -40%; bottom: -40%;
-  width: 24%;
-  left: -30%;
+  position: absolute; top: -40%; bottom: -40%; width: 24%; left: -30%;
   background: linear-gradient(90deg, transparent, rgba(255,255,255,0.7), transparent);
-  filter: blur(6px);
-  opacity: 0.65;
+  filter: blur(6px); opacity: 0.65;
   animation: splashShine 1.2s linear infinite;
 }
-
-/* Animations */
-@keyframes splashFill {
-  0% { width: 0%; }
-  100% { width: 100%; }
-}
-@keyframes splashShine {
-  0% { transform: translateX(0%); }
-  100% { transform: translateX(500%); }
-}
-
+@keyframes splashFill { 0% { width: 0%; } 100% { width: 100%; } }
+@keyframes splashShine { 0% { transform: translateX(0%); } 100% { transform: translateX(500%); } }
 /* Respecte prefers-reduced-motion */
 @media (prefers-reduced-motion: reduce) {
   .splash-overlay { transition: opacity 1ms linear; }
   .splash-bar__fill { animation: none; width: 100%; }
   .splash-bar__shine { animation: none; opacity: 0; }
 }
+/* Bloque le scroll tant que le splash est visible (renforce l’inline) */
+.splash-lock { overflow: hidden !important; height: 100% !important; }
 
-/* états du splash */
-.splash-overlay { opacity: 1; background: rgba(248,245,241,1); transition: opacity 400ms ease, background 400ms ease; }
-.splash-overlay--soft { background: rgba(248,245,241,0.78); } /* après 0.5s */
-.splash-overlay--fade { opacity: 0; pointer-events: none; }
-
-/* Bloque absolument tout scroll quand le splash est actif (renforce l’inline style) */
-.splash-lock {
-  overflow: hidden !important;
-  height: 100% !important;
+/* ============================================================
+   9) Mobile-only section clamps (fine-tuning on small screens)
+   ============================================================ */
+@media (max-width: 1023.98px) {
+  /**
+   * .m-clamp applique des clamp() sur:
+   *  - padding-top / padding-bottom
+   *  - margin-top
+   * Variables overridables via style="--m-pt-pct:2" etc.
+   */
+  .m-clamp {
+    --m-pt-pct: 3;  --m-pb-pct: 3;  --m-mt-pct: 4;
+    --m-pt-min: 0px; --m-pt-max: 28px;
+    --m-pb-min: 0px; --m-pb-max: 28px;
+    --m-mt-min: 8px; --m-mt-max: 40px;
+    padding-top:    clamp(var(--m-pt-min), calc(var(--m-pt-pct) * 1vw), var(--m-pt-max));
+    padding-bottom: clamp(var(--m-pb-min), calc(var(--m-pb-pct) * 1vw), var(--m-pb-max));
+    margin-top:     clamp(var(--m-mt-min), calc(var(--m-mt-pct) * 1vw), var(--m-mt-max));
+  }
+  .m-clamp--tight {
+    --m-pt-pct: 1.2; --m-pb-pct: 1.2; --m-mt-pct: 2.4;
+    --m-pt-max: 12px; --m-pb-max: 12px; --m-mt-max: 20px;
+  }
+  .m-clamp--loose {
+    --m-pt-pct: 6; --m-pb-pct: 6; --m-mt-pct: 8;
+    --m-pt-max: 56px; --m-pb-max: 56px; --m-mt-max: 64px;
+  }
 }

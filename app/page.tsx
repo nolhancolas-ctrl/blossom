@@ -1,5 +1,6 @@
+// app/page.tsx
 "use client";
-
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import PosterSection from "@/components/Poster";
@@ -10,14 +11,27 @@ import MailingSection from "@/components/MailingSection";
 const Countdown3D = dynamic(() => import("@/components/Countdown3D"), { ssr: false });
 
 export default function Home() {
-  const launch = "2025-12-01T10:00:00+09:00";
+  const [showBook, setShowBook] = useState(false);
+
+  // Préparation du livre juste avant la fin du splash (voir SplashScreen: prepareLeadMs)
+  useEffect(() => {
+    const prepare = () => setShowBook(true);
+    window.addEventListener("splash:prepare", prepare, { once: true });
+    // filet si l’event n’arrive pas
+    const id = window.setTimeout(() => setShowBook(true), 8000);
+    return () => {
+      window.removeEventListener("splash:prepare", prepare);
+      window.clearTimeout(id);
+    };
+  }, []);
+
+  const launch = "2026-26-03T10:00:00+09:00";
 
   return (
     <>
-
-      {/* === HEADER SECTION === */}
+      {/* === HEADER SECTION (au-dessus du parallax) === */}
       <section className="site-section site-header-section relative z-10">
-        {/* Header large (desktop) */}
+        {/* Desktop */}
         <header
           data-site-header
           className="hidden sm:block w-screen overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.15)]"
@@ -31,8 +45,7 @@ export default function Home() {
             priority
           />
         </header>
-
-        {/* Header mobile */}
+        {/* Mobile */}
         <header
           data-site-header
           className="block sm:hidden w-screen overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.15)]"
@@ -48,42 +61,40 @@ export default function Home() {
         </header>
       </section>
 
-      {/* === PARALLAX FIXE === */}
-      <ParallaxBg
-        small="/background_small.jpg"
-        big="/background_big.jpg"
-      />
+      {/* === PARALLAX (derrière tout le reste) === */}
+      <ParallaxBg small="/background_small.jpg" big="/background_big.jpg" />
 
-      {/* === MAIN CONTENT === */}
+      {/* === MAIN CONTENT (au-dessus du parallax) === */}
       <div className="relative z-10">
-        {/* === LIVRE 3D === */}
+        {/* LIVRE 3D */}
         <section className="site-section">
-          <BookSpline
-            src="https://my.spline.design/blossombookanimated-RABoYJaWjZ6evsgSlU4VgfI4/"
-            decorSrc="/dorure.webp"
-            designW={1200}
-            designH={700}
-            renderScale={0.6}
-          />
+          {showBook && (
+            <BookSpline
+              src="https://my.spline.design/blossombookanimated-RABoYJaWjZ6evsgSlU4VgfI4/"
+              decorSrc="/dorure.webp"
+              designW={1200}
+              designH={700}
+              renderScale={1}
+            />
+          )}
         </section>
 
-        {/* === COMPTEUR === */}
+        {/* COMPTEUR */}
         <section className="site-section text-center">
           <div className="grid place-items-center mt-4">
             <Countdown3D target={launch} size="lg" />
           </div>
           <h2 className="text-3xl md:text-4xl font-medium tracking-tight text-slate-800 mb-6 text-center">
-             Until Blossom Blooms
+            Until Blossom Blooms
           </h2>
-
         </section>
 
-        {/* === MAILING SECTION === */}
+        {/* MAILING */}
         <section className="site-section">
           <MailingSection />
         </section>
 
-        {/* === POSTERS === */}
+        {/* POSTERS */}
         <section className="site-section">
           <PosterSection
             leftSrc="https://my.spline.design/postercalathea-moCyI7RjYjeYDAemgq7igMGk/"

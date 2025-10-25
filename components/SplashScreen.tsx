@@ -1,124 +1,117 @@
-// components/SplashScreen.tsx
 "use client";
-import { useLayoutEffect, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
 
 /**
- * 🌸 SplashScreen (ancienne animation restaurée)
- * - Barre de progression + libellé "BLOSSOM"
- * - Blocage du scroll tant que visible (lock avant paint, body fixed)
- * - Timeline fiable: holdMs (barre) puis fadeMs (fondu), puis unmount
+ * 🌸 SplashScreen — robuste, auto-calculée et non-bloquante
+ * - 3 phases : solid → fade → gone
+ * - Déclenche `splash:prepare` 2s avant le fade
+ * - Timeout max de 3s (force le fade)
+ * - Pas de dépendance à setTimeout (utilise performance.now)
+ * - Bloque le scroll le temps du splash
  */
-export default function SplashScreen({
-  holdMs = 1700, // durée de remplissage de la barre (opaque)
-  fadeMs = 600,  // durée du fade-out
-}: {
-  holdMs?: number;
-  fadeMs?: number;
-}) {
-  const [phase, setPhase] = useState<"hold" | "fade">("hold");
-  const [visible, setVisible] = useState(true);
+export default function SplashScreen() {
+  const [phase, setPhase] = useState<"solid" | "fade" | "gone">("solid");
 
-  // sauvegarde/restaure scroll & styles
-  const scrollYRef = useRef(0);
-  const prevHtmlOverflow = useRef<string>("");
-  const prevBodyOverflow = useRef<string>("");
-  const prevBodyPos = useRef<string>("");
-  const prevBodyTop = useRef<string>("");
-  const prevent = (e: Event) => {
-    e.preventDefault();
-    e.stopPropagation();
-  };
+  const startRef = useRef<number>(0);
+  const rafRef = useRef<number>(0);
+  const unlockedRef = useRef(false);
 
-  // 🔒 Lock scroll avant le premier paint client
-  useLayoutEffect(() => {
+  // phase durations (calculées dynamiquement)
+  const solidMin = 1200;   // minimum opaque phase
+  const fadeDur = 800;     // fade-out duration
+  const maxTotal = 3000;   // max visible duration (failsafe)
+  const prepareOffset = 2000; // trigger 2s before fade
+
+  // scroll lock
+  useEffect(() => {
     const html = document.documentElement;
-    const body = document.body;
+    html.classList.add("splash-lock");
+    return () => html.classList.remove("splash-lock");
+  }, []);
 
-    scrollYRef.current = window.scrollY || 0;
+  useEffect(() => {
+    const now = () => performance.now();
+    startRef.current = now();
 
-    // backup styles inline
-    prevHtmlOverflow.current = html.style.overflow;
-    prevBodyOverflow.current = body.style.overflow;
-    prevBodyPos.current = body.style.position;
-    prevBodyTop.current = body.style.top;
+    // pick a dynamic display time between 1.8–2.4s for variation
+    const solidDuration = Math.min(
+      solidMin + Math.random() * 600, // 1200 → 1800ms
+      maxTotal - fadeDur
+    );
 
-    // lock sans jump (iOS/Android safe)
-    html.style.overflow = "hidden";
-    body.style.overflow = "hidden";
-    body.style.position = "fixed";
-    body.style.top = `-${scrollYRef.current}px`;
-    body.style.width = "100%";
+    const fadeStart = startRef.current + solidDuration;
+    const fadeEnd = fadeStart + fadeDur;
+    const hardEnd = startRef.current + maxTotal;
 
-    // bloque gestes pendant le splash
-    window.addEventListener("wheel", prevent, { passive: false });
-    window.addEventListener("touchmove", prevent, { passive: false });
+    // trigger “prepare” event (2s before fade)
+    const prepareAt = Math.max(startRef.current, fadeStart - prepareOffset);
+    const prepTimer = window.setTimeout(() => {
+      window.dispatchEvent(new CustomEvent("splash:prepare"));
+    }, prepareAt - now());
 
-    // timeline: hold → fade → unmount
-    const t1 = window.setTimeout(() => setPhase("fade"), holdMs);
-    const t2 = window.setTimeout(() => {
-      setVisible(false);
-      // restore scroll & styles
-      window.removeEventListener("wheel", prevent);
-      window.removeEventListener("touchmove", prevent);
+    const tick = () => {
+      const t = now();
 
-      html.style.overflow = prevHtmlOverflow.current;
-      body.style.overflow = prevBodyOverflow.current;
-      body.style.position = prevBodyPos.current;
-      body.style.top = prevBodyTop.current;
-      body.style.width = "";
+      if (t >= hardEnd) {
+        // Failsafe: force fade end
+        if (!unlockedRef.current) {
+          unlockedRef.current = true;
+          document.documentElement.classList.remove("splash-lock");
+          window.dispatchEvent(new CustomEvent("splash:done"));
+        }
+        setPhase("gone");
+        return;
+      }
 
-      // remet exactement à la même position
-      window.scrollTo(0, scrollYRef.current);
-    }, holdMs + fadeMs);
+      if (t >= fadeEnd) {
+        // fade done → remove splash
+        if (!unlockedRef.current) {
+          unlockedRef.current = true;
+          document.documentElement.classList.remove("splash-lock");
+          window.dispatchEvent(new CustomEvent("splash:done"));
+        }
+        setPhase("gone");
+      } else if (t >= fadeStart) {
+        // start fading
+        setPhase("fade");
+      }
 
-    return () => {
-      window.clearTimeout(t1);
-      window.clearTimeout(t2);
-      window.removeEventListener("wheel", prevent);
-      window.removeEventListener("touchmove", prevent);
-      // restore au cas où
-      html.style.overflow = prevHtmlOverflow.current;
-      body.style.overflow = prevBodyOverflow.current;
-      body.style.position = prevBodyPos.current;
-      body.style.top = prevBodyTop.current;
-      body.style.width = "";
+      rafRef.current = requestAnimationFrame(tick);
     };
-  }, [holdMs, fadeMs]);
+
+    rafRef.current = requestAnimationFrame(tick);
+    return () => {
+      clearTimeout(prepTimer);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, []);
+
+  if (phase === "gone") return null;
 
   return (
-    <AnimatePresence>
-      {visible && (
-        <motion.div
-          key="splash"
-          initial={{ opacity: 1 }}
-          animate={{ opacity: phase === "hold" ? 1 : 0 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: phase === "hold" ? 0 : fadeMs / 1000, ease: "easeOut" }}
-          style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 9999,
-            display: "grid",
-            placeItems: "center",
-            background: "rgba(248,245,241,1)", // ton fond off-white
-            pointerEvents: "all",
-            touchAction: "none",
-            WebkitTapHighlightColor: "transparent",
-          }}
-          aria-label="Loading Blossom"
-          role="status"
-        >
-          {/* Bloc centré : libellé + barre */}
-          <div className="splash-inner">
-            <div className="splash-title" aria-label="Blossom loading">Blossom</div>
-            <div className="splash-bar" role="progressbar" aria-valuemin={0} aria-valuemax={100}>
-              <span className="splash-bar__fill" />
-              <span className="splash-bar__shine" />
-            </div>
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+    <div
+      className={[
+        "splash-overlay",
+        phase === "fade" ? "splash-overlay--fade" : "",
+      ].join(" ")}
+      style={{
+        transitionDuration: phase === "fade" ? "800ms" : "400ms",
+      }}
+    >
+      <div className="splash-inner">
+        <div className="splash-title">Blossom</div>
+
+        {/* Barre animée simple */}
+        <div className="splash-bar">
+          <span
+            className="splash-bar__fill"
+            style={{
+              animationDuration: `${Math.min(2000, Math.random() * 800 + 1600)}ms`,
+            }}
+          />
+          <span className="splash-bar__shine" />
+        </div>
+      </div>
+    </div>
   );
 }
