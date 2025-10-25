@@ -85,6 +85,7 @@ function DigitReel({ value, height }: { value: number; height: number }) {
     </div>
   );
 }
+
 function TwoDigits({ num, height }: { num: number; height: number }) {
   const tens = Math.floor(num / 10) % 10;
   const ones = num % 10;
@@ -106,79 +107,42 @@ export default function Countdown3D({
   onComplete,
   // gabarit externe (aligne avec MailingSection)
   maxWClass = "max-w-4xl",
-  padClass = "px-14 sm:px-10 lg:px-12", // ← tes marges “directrices”
+  padClass = "px-14 sm:px-10 lg:px-12", // ← marges directrices
 }: Countdown3DProps) {
   const dims = SIZES[(size as SizeKey) ?? "md"] ?? SIZES.md;
   const targetMs = useMemo(() => new Date(target).getTime(), [target]);
 
-  /** Mesure de la largeur “utile” = clientWidth - paddings  */
-  const outerRef = useRef<HTMLDivElement | null>(null);
+  /** ── SCALE width-only (drivé par la largeur utile dans les marges px-14) ── */
+  const hostRef = useRef<HTMLDivElement | null>(null);
   const [scale, setScale] = useState(1);
-  const vh0Ref = useRef<number>(0);
-  useEffect(() => { if (!vh0Ref.current) vh0Ref.current = window.innerHeight || 0; }, []);
-
-  const getInnerWidth = (el: HTMLElement | null) => {
-    if (!el) return window.innerWidth || 1;
-    const cs = window.getComputedStyle(el);
-    const pl = parseFloat(cs.paddingLeft || "0");
-    const pr = parseFloat(cs.paddingRight || "0");
-    return Math.max(0, el.clientWidth - pl - pr);
-  };
 
   useEffect(() => {
-    let lastInnerW = window.innerWidth;
     let raf = 0;
-
     const computeNow = () => {
       raf = 0;
-      const hostW = getInnerWidth(outerRef.current);           // ✅ enlève les paddings (px-14 etc.)
-      const vw = window.innerWidth || 1;
-      const vh = window.innerHeight || 1;
-      const ar = vw / vh;
-
-      const widthFit = hostW / designW;                        // desktop : fit largeur utile
-      const mobileFit = (Math.max(1, vh0Ref.current) * 0.6) / designH; // mobile tall : 60% de VH₀
-
-      let targetScale: number;
-      if (ar > 1.05) targetScale = widthFit;
-      else if (ar < 0.95) targetScale = mobileFit;
-      else {
-        const t = (ar - 0.95) / (1.05 - 0.95);
-        targetScale = mobileFit * (1 - t) + widthFit * t;
-      }
-      const s = Math.max(0.1, Math.min(3, targetScale));
-      setScale((prev) => (Math.abs(prev - s) > 1e-4 ? s : prev));
+      const hostW = hostRef.current?.clientWidth ?? 0; // largeur dispo à l'intérieur des paddings
+      if (hostW <= 0) return;
+      // scale purement largeur, clamp pour éviter des tailles absurdes
+      const s = Math.max(0.6, Math.min(1, hostW / designW));
+      setScale(prev => (Math.abs(prev - s) > 1e-4 ? s : prev));
     };
-
     const compute = () => { if (!raf) raf = requestAnimationFrame(computeNow); };
 
-    // Observe largeur + paddings (RO + computed paddings)
-    const ro = new ResizeObserver(() => compute());
-    if (outerRef.current) ro.observe(outerRef.current);
-
-    // recompute sur orientation/resize
-    const onOrientation = () => compute();
-    const onResizeWidthOnly = () => {
-      const wNow = window.innerWidth;
-      if (Math.abs(wNow - lastInnerW) >= 1) { lastInnerW = wNow; compute(); }
-    };
-
-    // recompute aussi si les classes de padding changent
-    const mo = new MutationObserver(() => compute());
-    if (outerRef.current) mo.observe(outerRef.current, { attributes: true, attributeFilter: ["class", "style"] });
-
     compute();
-    window.addEventListener("orientationchange", onOrientation);
-    window.addEventListener("resize", onResizeWidthOnly, { passive: true });
+    const ro = new ResizeObserver(compute);
+    if (hostRef.current) ro.observe(hostRef.current);
+
+    const onResize = () => compute();
+    window.addEventListener("resize", onResize, { passive: true });
+    window.addEventListener("orientationchange", onResize);
 
     return () => {
       if (raf) cancelAnimationFrame(raf);
       ro.disconnect();
-      mo.disconnect();
-      window.removeEventListener("orientationchange", onOrientation);
-      window.removeEventListener("resize", onResizeWidthOnly);
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("orientationchange", onResize);
     };
-  }, [designW, designH]);
+  }, [designW]);
 
   /** Tick compteur */
   const [isClient, setIsClient] = useState(false);
@@ -196,88 +160,89 @@ export default function Countdown3D({
     return () => clearInterval(id);
   }, [isClient, targetMs, onComplete]);
 
-  const safeScale = Number.isFinite(scale) && scale > 0 ? scale : 1;
-
   return (
     <section className={`relative z-10 w-full ${className}`}>
       {/* OUTER : borné par maxW + paddings (les paddings guident la réduction) */}
-      <div ref={outerRef} className={`mx-auto w-full ${maxWClass} ${padClass}`}>
-        <div className="w-full grid place-items-center" style={{ overflow: "visible" }}>
-          <div
-            className="relative group"
-            style={{
-              width: `${designW}px`,
-              height: `${designH}px`,
-              transform: `scale(${safeScale})`,
-              transformOrigin: "center center",
-              willChange: "transform",
-              display: "grid",
-              placeItems: "center",
-            }}
-          >
-            {/* Carte verre */}
+      <div className={`mx-auto w-full ${maxWClass} ${padClass}`}>
+        {/* Host qui mesure la largeur utile (clientWidth inclut déjà les paddings de ce parent) */}
+        <div ref={hostRef} className="relative w-full">
+          {/* Réserve de hauteur = designH * scale pour éviter tout jump de layout */}
+          <div className="relative mx-auto" style={{ height: `${designH * scale}px`, width: "100%" }}>
+            {/* Carte centrée, scaled depuis le haut-centre */}
             <div
-              className="relative isolate overflow-hidden rounded-2xl backdrop-blur-md transition-all duration-500"
+              className="absolute left-1/2 top-0 grid place-items-center"
               style={{
-                background: "rgba(255,255,255,0.26)",
-                border: "1px solid rgba(255,255,255,0.35)",
-                boxShadow: "0 20px 50px rgba(0,0,0,0.12), inset 0 0.5px 0 rgba(255,255,255,0.35)",
+                width: `${designW}px`,
+                height: `${designH}px`,
+                transform: `translateX(-50%) scale(${scale})`,
+                transformOrigin: "top center",
+                willChange: "transform",
               }}
             >
-              {/* glow au hover */}
+              {/* Carte verre */}
               <div
-                className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                style={{ boxShadow: "0 0 0 2px rgba(255,255,255,0.65), inset 0 0 30px rgba(255,255,255,0.22)" }}
-              />
-              {/* rayon bordure */}
-              <span
-                aria-hidden
-                className="pointer-events-none absolute inset-0 rounded-2xl"
+                className="relative isolate overflow-hidden rounded-2xl backdrop-blur-md transition-all duration-500"
                 style={{
-                  padding: 1.5,
-                  WebkitMask: "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
-                  WebkitMaskComposite: "xor",
-                  maskComposite: "exclude",
-                  background:
-                    "conic-gradient(from 0deg, rgba(255,255,255,0.0), rgba(255,255,255,0.9), rgba(255,255,255,0.0))",
-                  animation: "borderSweep 2.4s linear infinite",
-                  opacity: 0.85,
-                  filter: "blur(0.2px)",
+                  background: "rgba(255,255,255,0.26)",
+                  border: "1px solid rgba(255,255,255,0.35)",
+                  boxShadow: "0 20px 50px rgba(0,0,0,0.12), inset 0 0.5px 0 rgba(255,255,255,0.35)",
                 }}
-              />
-              {/* BG flouté */}
+              >
+                {/* glow au hover */}
+                <div
+                  className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                  style={{ boxShadow: "0 0 0 2px rgba(255,255,255,0.65), inset 0 0 30px rgba(255,255,255,0.22)" }}
+                />
+                {/* rayon bordure */}
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute inset-0 rounded-2xl"
+                  style={{
+                    padding: 1.5,
+                    WebkitMask: "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
+                    WebkitMaskComposite: "xor",
+                    maskComposite: "exclude",
+                    background:
+                      "conic-gradient(from 0deg, rgba(255,255,255,0.0), rgba(255,255,255,0.9), rgba(255,255,255,0.0))",
+                    animation: "borderSweep 2.4s linear infinite",
+                    opacity: 0.85,
+                    filter: "blur(0.2px)",
+                  }}
+                />
+                {/* BG flouté */}
+                <div
+                  aria-hidden
+                  className="absolute inset-0 pointer-events-none"
+                  style={{
+                    backgroundImage: "url('/background_countdown3D.jpg')",
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                    filter: "blur(4px)",
+                    transform: "scale(1.02)",
+                  }}
+                />
+                {/* contenu */}
+                <CounterRows
+                  dims={SIZES[(size as SizeKey) ?? "md"] ?? SIZES.md}
+                  months={isClient ? months : 0}
+                  days={isClient ? days : 0}
+                  hours={isClient ? hours : 0}
+                />
+              </div>
+
+              {/* Ombre sol */}
               <div
-                aria-hidden
-                className="absolute inset-0 pointer-events-none"
+                className="pointer-events-none absolute -z-10"
                 style={{
-                  backgroundImage: "url('/background_countdown3D.jpg')",
-                  backgroundSize: "cover",
-                  backgroundPosition: "center",
-                  filter: "blur(4px)",
-                  transform: "scale(1.02)",
+                  bottom: -12,
+                  width: 380,
+                  height: 140,
+                  filter: "blur(36px)",
+                  opacity: 0.38,
+                  background: "radial-gradient(ellipse at center, rgba(0,0,0,0.26), transparent 60%)",
                 }}
-              />
-              {/* contenu */}
-              <CounterRows
-                dims={SIZES[(size as SizeKey) ?? "md"] ?? SIZES.md}
-                months={isClient ? months : 0}
-                days={isClient ? days : 0}
-                hours={isClient ? hours : 0}
               />
             </div>
-
-            {/* Ombre sol */}
-            <div
-              className="pointer-events-none absolute -z-10"
-              style={{
-                bottom: -12,
-                width: 380,
-                height: 140,
-                filter: "blur(36px)",
-                opacity: 0.38,
-                background: "radial-gradient(ellipse at center, rgba(0,0,0,0.26), transparent 60%)",
-              }}
-            />
           </div>
         </div>
       </div>

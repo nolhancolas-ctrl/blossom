@@ -47,14 +47,46 @@ a { color: inherit; text-decoration: none; }
    3) Layout Rhythm — Sections spacing
    - Mobile : espacement réduit (~ -2/3)
    ============================================================ */
-.site-section { padding-block: clamp(0rem, 2vw, 1.5rem); }
-.site-section + .site-section { margin-top: clamp(0rem, 1vw, .5rem); }
-@media (max-width: 640px) {
-  .site-section { padding-block: clamp(0rem, 1.2vw, 1rem); }
-  .site-section + .site-section { margin-top: clamp(-6rem, 1.2vw, 0.9rem); }
+
+/* base (desktop/tablette) */
+.site-section {
+  /* ↓ paddings très modestes */
+  padding-block: clamp(0.25rem, 0.8vw, 0.8rem);
 }
-/* Header collé en haut (pas de padding/marge) */
-.site-header-section { padding-block: 0 !important; margin-top: 0 !important; }
+
+/* supprime tout écart entre deux sections */
+.site-section + .site-section {
+  margin-top: 0;
+}
+
+/* supprime les marges du premier et dernier enfant pour éviter les doubles espacements */
+.site-section > :first-child {
+  margin-top: 0;
+}
+.site-section > :last-child {
+  margin-bottom: 0;
+}
+
+/* Mobile : toujours un peu plus d’air mais cohérent */
+@media (max-width: 640px) {
+  .site-section {
+    padding-block: clamp(0.2rem, 1vw, 0.6rem);
+  }
+  .site-section + .site-section {
+    margin-top: 0;
+  }
+  .site-section > :last-child { margin-bottom: 0; }
+}
+
+/* Espacement avant le footer — équilibré avec le header */
+main > :is(section, .site-section):last-child {
+  margin-bottom: clamp(2rem, 5vw, 4rem) !important;
+}
+
+/*Extra breathing room before the footer */ 
+.page-main :is(section,.site-section):last-of-type {
+  margin-bottom: clamp(4rem, 8vw, 8rem) !important;
+}
 
 /* ============================================================
    4) Typography — Titles & Body
@@ -273,12 +305,4 @@ body.splash-fixed {
     --m-pt-pct: 6; --m-pb-pct: 6; --m-mt-pct: 8;
     --m-pt-max: 56px; --m-pb-max: 56px; --m-mt-max: 64px;
   }
-}
-
-/* ============================================================
-   10) Harmonisation des espacements de page
-   ============================================================ */
-/* Extra breathing room before the footer */
-.page-main :is(section,.site-section):last-of-type {
-  margin-bottom: clamp(4rem, 8vw, 8rem) !important;
 }

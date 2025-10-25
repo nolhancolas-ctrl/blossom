@@ -95,8 +95,7 @@ export default function PosterSection({
         {title}
       </h2>
 
-      <p className="max-w-2xl mx-auto text-center text-slate-700/90 text-[0.98rem] md:text-[1.05rem] leading-relaxed mb-6">
-        Lush botanical posters rendered in Spline — crisp, dimensional and print-ready vibes.
+      <p className="max-w-2xl mx-auto text-center text-slate-700/90 text-[0.98rem] md:text-[1.05rem] leading-relaxed mb-3 md:mb-4">        Lush botanical posters rendered in Spline — crisp, dimensional and print-ready vibes.
         A calm way to bring nature into your space.
       </p>
 
@@ -140,7 +139,7 @@ export default function PosterSection({
       </div>
 
       {/* CTA noir (style Mailing) */}
-      <div className="flex items-center justify-center mt-6">
+      <div className="flex items-center justify-center">
         <a
           href={ctaHref}
           className="relative inline-flex items-center justify-center h-12 sm:h-14 px-8 sm:px-10
