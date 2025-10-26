@@ -1,16 +1,31 @@
 // components/BookSpline.tsx
 "use client";
+
 import { useEffect, useMemo, useRef, useState } from "react";
 
+/**
+ * Composant d’affichage du livre (embed Spline) avec :
+ * - scale responsive (desktop = width-fit * desktopScalePct ; mobile = basé sur la hauteur initiale du viewport)
+ * - centrage horizontal fin via centerOffsetPct (ex: 0.48)
+ * - masque latéral “oversize” pour éviter de voir les bords de l’iframe
+ * - qualité dynamique (downscale) selon le breakpoint
+ * - décor optionnel centré derrière l’iframe
+ */
 export type BookSplineProps = {
   src: string;
+
+  // Gabarit de la scène Spline (taille de design)
   designW?: number;
   designH?: number;
+
+  // (non utilisé dans cette version mais conservé pour compat)
   renderScale?: number;
+
   className?: string;
   style?: React.CSSProperties;
   interactive?: boolean;
-  // Décor
+
+  // Décor optionnel (image en arrière-plan du livre)
   decorSrc?: string;
   decorScale?: number;
   decorBlurPx?: number;
@@ -18,16 +33,21 @@ export type BookSplineProps = {
   decorWidthRatioDesktop?: number;
   decorWidthRatioSquare?: number;
   decorWidthRatioMobile?: number;
-  // Taille/scale
+
+  // Taille / scale
   desktopScalePct?: number;
-  /** ⇣ élargissement artificiel en pixels (chaque côté) — pour masquer + fort */
-  extraSideCropPx?: number; // défaut ↑
-  /** ⇣ élargissement artificiel en pourcentage du host (sécurité) */
-  oversizePct?: number;     // défaut ↑
-  /** ⇣ réglage fin du recentrage (0.5 = centré parfait) */
+
+  /** ⇣ élargissement en pixels (chaque côté) — renforce le masquage latéral */
+  extraSideCropPx?: number;
+
+  /** ⇣ élargissement en pourcentage du host (sécurité si le crop px ne suffit pas) */
+  oversizePct?: number;
+
+  /** ⇣ réglage fin du recentrage horizontal (0.5 = centré parfait) */
   centerOffsetPct?: number;
-  // Compat/perf
-  detachWhenOffscreen?: boolean;
+
+  // Compat/perf & qualité
+  detachWhenOffscreen?: boolean;           // (non utilisé ici, conservé pour compat)
   disableDecorBlurOnDesktop?: boolean;
   qualityPctDesktop?: number;
   qualityPctMobile?: number;
@@ -37,78 +57,121 @@ export type BookSplineProps = {
 
 export default function BookSpline({
   src,
+  // dimensions “design” de la scène Spline
   designW = 1200,
   designH = 700,
-  renderScale = 0.4,
+
+  // déco
+  renderScale = 0.4, // (non utilisé)
   decorScale = 1.5,
   decorBlurPx = 0.1,
   decorMaxSizePx = 1200,
   decorWidthRatioDesktop = 0.55,
   decorWidthRatioSquare = 0.4,
   decorWidthRatioMobile = 0.4,
+
+  // scale
   desktopScalePct = 0.8,
-  /** 🔧 on masque beaucoup plus large par défaut */
+
+  /* 🔧 masque latéral agressif par défaut (robuste contre les bords Spline) */
   extraSideCropPx = 600,
   oversizePct = 1.6,
+
+  // décalage horizontal léger (garde ta compo d’origine)
   centerOffsetPct = 0.48,
-  detachWhenOffscreen = true,
+
+  // perf & qualité
+  detachWhenOffscreen = true, // (non utilisé)
   disableDecorBlurOnDesktop = true,
   qualityPctDesktop = 0.6,
   qualityPctMobile = 1.0,
   maxScaleDesktop = 0.9,
   maxScaleMobile = 0.88,
+
   className = "",
   style,
   interactive = false,
   decorSrc,
 }: BookSplineProps) {
+  // URL Spline nettoyée (UI off, autoplay, transparence)
   const embedUrl = useMemo(() => toEmbedUrl(src), [src]);
+
   const hostRef = useRef<HTMLDivElement | null>(null);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
 
-  // Scale responsive (inchangé)
+  /** ===== Scale responsive =====
+   * Desktop : widthFit * desktopScalePct (plafonné par maxScaleDesktop)
+   * Mobile  : basé sur la hauteur initiale de viewport (vh0) * 0.6 / designH (plafonné par maxScaleMobile)
+   * Zone quasi-carrée : interpolation douce entre mobileFit et desktopFit
+   */
   const [scale, setScale] = useState(1);
   const vh0Ref = useRef<number>(0);
-  useEffect(() => { if (!vh0Ref.current) vh0Ref.current = window.innerHeight || 0; }, []);
+
+  // Mémorise la hauteur initiale du viewport (utile pour mobileFit)
+  useEffect(() => {
+    if (!vh0Ref.current) vh0Ref.current = window.innerHeight || 0;
+  }, []);
 
   useEffect(() => {
     let lastInnerW = window.innerWidth;
     let raf = 0;
+
     const computeNow = () => {
       raf = 0;
+
       const hostW = hostRef.current?.clientWidth ?? window.innerWidth;
       const vw = window.innerWidth || 1;
       const vh = window.innerHeight || 1;
       const ar = vw / vh;
+
+      // Desktop : s’adapte à la largeur dispo
       const widthFit = hostW / designW;
       const widthFitDesktopReduced = widthFit * Math.max(0.1, Math.min(1, desktopScalePct));
+
+      // Mobile : s’appuie sur la hauteur initiale du viewport (stable)
       const mobileFit = (Math.max(1, vh0Ref.current) * 0.6) / designH;
+
       let target: number;
-      if (ar > 1.05) target = widthFitDesktopReduced;
-      else if (ar < 0.95) target = mobileFit;
-      else {
+      if (ar > 1.05) {
+        // ratio large ⇒ desktop
+        target = widthFitDesktopReduced;
+      } else if (ar < 0.95) {
+        // ratio étroit ⇒ mobile
+        target = mobileFit;
+      } else {
+        // zone carrée : interpolation entre mobile et desktop
         const t = (ar - 0.95) / (1.05 - 0.95);
         target = mobileFit * (1 - t) + widthFitDesktopReduced * t;
       }
+
       const cap = ar > 1.05 ? maxScaleDesktop : maxScaleMobile;
       const s = Math.max(0.1, Math.min(cap, target));
       setScale((prev) => (Math.abs(prev - s) > 1e-4 ? s : prev));
     };
+
     const compute = () => { if (!raf) raf = requestAnimationFrame(computeNow); };
+
+    // Observe les variations de largeur du host (plus fiable que le window resize seul)
     const ro = new ResizeObserver((entries) => {
       const w = entries[0]?.contentRect?.width || 0;
       if (w > 0) compute();
     });
+
     const el = hostRef.current;
     if (el) ro.observe(el);
+
     const onOrientation = () => compute();
+
+    // On ne recalcule que s’il y a un vrai changement de largeur
     const onResizeWidthOnly = () => {
       const wNow = window.innerWidth;
       if (Math.abs(wNow - lastInnerW) >= 1) { lastInnerW = wNow; compute(); }
     };
+
     compute();
     window.addEventListener("orientationchange", onOrientation);
     window.addEventListener("resize", onResizeWidthOnly, { passive: true });
+
     return () => {
       if (raf) cancelAnimationFrame(raf);
       ro.disconnect();
@@ -117,7 +180,10 @@ export default function BookSpline({
     };
   }, [designW, designH, desktopScalePct, maxScaleDesktop, maxScaleMobile]);
 
-  // Qualité (downscale pur)
+  /** ===== Qualité dynamique (downscale) =====
+   * Desktop : affiche à qualityPctDesktop
+   * Mobile  : qualityPctMobile
+   */
   const [qualityPct, setQualityPct] = useState(qualityPctDesktop);
   useEffect(() => {
     const mql = window.matchMedia("(max-width: 1023.98px)");
@@ -128,13 +194,22 @@ export default function BookSpline({
   }, [qualityPctDesktop, qualityPctMobile]);
   const q = Math.max(0.3, Math.min(1, qualityPct));
 
-  // Décor
+  /** ===== Décor : dimensionné proportionnellement à la largeur affichée ===== */
   const displayW = Math.round(designW * scale);
   const ar =
     typeof window !== "undefined" ? (window.innerWidth || 1) / (window.innerHeight || 1) : 1.2;
+
   const decorRatio =
-    ar > 1.05 ? decorWidthRatioDesktop : ar < 0.95 ? decorWidthRatioMobile : decorWidthRatioSquare;
-  const decorWidthPx = Math.min(decorMaxSizePx, Math.max(180, Math.round(displayW * decorRatio)));
+    ar > 1.05 ? decorWidthRatioDesktop
+              : ar < 0.95 ? decorWidthRatioMobile
+                          : decorWidthRatioSquare;
+
+  const decorWidthPx = Math.min(
+    decorMaxSizePx,
+    Math.max(180, Math.round(displayW * decorRatio))
+  );
+
+  // Désactive le blur déco sur desktop si demandé
   const effectiveDecorBlur =
     disableDecorBlurOnDesktop &&
     typeof window !== "undefined" &&
@@ -142,10 +217,10 @@ export default function BookSpline({
       ? 0
       : decorBlurPx;
 
-  // ⚙️ Sur-élargissement + masque (le plus simple et robuste)
+  /** ===== Masque latéral “oversize” : élargit l’iframe au-delà du host ===== */
   const oversizeCSS = `max(calc(100% + ${extraSideCropPx * 2}px), ${oversizePct * 100}%)`;
 
-  // Shrink interne du livre (ton choix précédent)
+  /** ===== Shrink interne du livre (ta valeur préférée pour garder la compo) ===== */
   const bookInnerScale = 0.8;
 
   return (
@@ -160,6 +235,7 @@ export default function BookSpline({
         ref={hostRef}
         className={[
           "relative z-0 flex justify-center pointer-events-none w-full",
+          // Hauteurs responsives (via custom units css --vhpx dans ton projet)
           "h-55vhpx md:h-76vhpx lg:h-94vhpx",
         ].join(" ")}
         style={{
@@ -167,10 +243,10 @@ export default function BookSpline({
           isolation: "isolate",
           contain: "layout paint size style",
           backfaceVisibility: "hidden",
-          overflow: "hidden", // ⬅️ masque dur des côtés
+          overflow: "hidden", // masque dur des côtés
         }}
       >
-        {/* Décor */}
+        {/* === Décor (optionnel) === */}
         {decorSrc && (
           <div
             aria-hidden
@@ -200,7 +276,7 @@ export default function BookSpline({
           </div>
         )}
 
-        {/* Surface Spline élargie, centrée, cropée par le host */}
+        {/* === Surface Spline élargie, centrée horizontalement (top-center), cropée par le host === */}
         <div
           style={{
             position: "absolute",
@@ -208,13 +284,13 @@ export default function BookSpline({
             left: `${centerOffsetPct * 100}%`, // ex: 48%
             transform: "translateX(-50%)",
             transformOrigin: "top center",
-            width: oversizeCSS,   // ⬅️ beaucoup plus large
+            width: oversizeCSS,     // très large pour éviter de voir les bords
             height: "100%",
             pointerEvents: interactive ? "auto" : "none",
             zIndex: 2,
           }}
         >
-          {/* wrapper qualité + shrink livre */}
+          {/* Wrapper qualité + shrink interne (garde la compo tout en baissant la qualité réelle) */}
           <div
             style={{
               position: "absolute",
@@ -252,6 +328,7 @@ export default function BookSpline({
   );
 }
 
+/** Normalise l’URL Spline pour un embed clean (pas d’UI, autoplay, fond transparent) */
 function toEmbedUrl(u: string) {
   try {
     const url = new URL(u);

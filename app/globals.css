@@ -56,13 +56,14 @@ a { color: inherit; text-decoration: none; }
 /* 1) Variables globales */
 :root {
   --gap: 30px;     /* espace entre sections sur desktop */
-  --gap-after-header: 40px; /* juste après le header */
+  --gap-after-header: 0px; /* juste après le header */
   --gap-before-footer: 40px; /* dernière section avant le footer */
 }
 
 /* 2) Padding interne léger (facultatif) */
 .site-section {
   padding-block: 0; /* mets 0 si tu veux aucun padding interne */
+  transform: 'translateY(-20px)';
 }
 
 /* 3) Supprime marges internes parasites */

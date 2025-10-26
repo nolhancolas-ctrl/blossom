@@ -80,7 +80,7 @@ export default function Home() {
         </section>
 
         {/* COMPTEUR */}
-        <section className="text-center">
+        <section className="">
           <div className="grid place-items-center mt-4">
             <Countdown3D target={launch} size="lg" />
           </div>

@@ -21,7 +21,7 @@ export default function FooterOffWhite({
       {/* Contenu principal avec padding fluide */}
       <div
         className="
-          mx-auto max-w-6xl px-4 sm:px-6 lg:px-8
+          mx-auto max-w-6xl px-10 sm:px-12 lg:px-14
           [padding-block:clamp(2rem,5vw,6rem)]
         "
       >
@@ -130,10 +130,10 @@ export default function FooterOffWhite({
               rounded-2xl border border-black/10 bg-white/70
               backdrop-blur-md shadow-lg p-8
               md:col-start-2 md:row-start-1 md:row-span-2 md:h-full
-              flex flex-col justify-center text-center md:text-justify
+              flex flex-col justify-center text-center text-justify
             "
           >
-            <h3 className="text-xl font-medium tracking-tight mb-4 text-center md:text-left">
+            <h3 className="text-xl font-medium tracking-tight mb-4 text-center">
               Not about me
             </h3>
             <p className="text-slate-800/90 leading-relaxed max-w-prose mx-auto md:mx-0">
