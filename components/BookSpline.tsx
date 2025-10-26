@@ -18,9 +18,6 @@ export type BookSplineProps = {
   designW?: number;
   designH?: number;
 
-  // (non utilisé dans cette version mais conservé pour compat)
-  renderScale?: number;
-
   className?: string;
   style?: React.CSSProperties;
   interactive?: boolean;
@@ -61,9 +58,7 @@ export default function BookSpline({
   designW = 1200,
   designH = 700,
 
-  // déco
-  renderScale = 0.4, // (non utilisé)
-  decorScale = 1.5,
+  // décor
   decorBlurPx = 0.1,
   decorMaxSizePx = 1200,
   decorWidthRatioDesktop = 0.55,
@@ -81,7 +76,6 @@ export default function BookSpline({
   centerOffsetPct = 0.48,
 
   // perf & qualité
-  detachWhenOffscreen = true, // (non utilisé)
   disableDecorBlurOnDesktop = true,
   qualityPctDesktop = 0.6,
   qualityPctMobile = 1.0,
@@ -106,6 +100,13 @@ export default function BookSpline({
    */
   const [scale, setScale] = useState(1);
   const vh0Ref = useRef<number>(0);
+
+  const [isDesktop, setIsDesktop] = useState<boolean>(() =>
+    typeof window !== "undefined" ? window.matchMedia("(min-width:1024px)").matches : true
+  );
+
+  // Détermine un scale décor différent selon desktop / mobile
+  const effectiveDecorScale = isDesktop ? 2.2 : 1.5;
 
   // Mémorise la hauteur initiale du viewport (utile pour mobileFit)
   useEffect(() => {
@@ -235,7 +236,6 @@ export default function BookSpline({
         ref={hostRef}
         className={[
           "relative z-0 flex justify-center pointer-events-none w-full",
-          // Hauteurs responsives (via custom units css --vhpx dans ton projet)
           "h-55vhpx md:h-76vhpx lg:h-94vhpx",
         ].join(" ")}
         style={{
@@ -243,7 +243,7 @@ export default function BookSpline({
           isolation: "isolate",
           contain: "layout paint size style",
           backfaceVisibility: "hidden",
-          overflow: "hidden", // masque dur des côtés
+          overflow: "hidden",
         }}
       >
         {/* === Décor (optionnel) === */}
@@ -257,16 +257,15 @@ export default function BookSpline({
               placeItems: "center",
               pointerEvents: "none",
               zIndex: 0,
-              transform: "translateY(12%)",
+              transform: "translateY(13%)",
             }}
           >
             <img
               src={decorSrc}
-              alt="Décor doré Blossom"
               style={{
                 width: `${decorWidthPx}px`,
                 height: "auto",
-                transform: `scale(${decorScale})`,
+                transform: `scale(${effectiveDecorScale})`,
                 objectFit: "contain",
                 objectPosition: "center",
                 filter: effectiveDecorBlur ? `blur(${effectiveDecorBlur}px)` : "none",
@@ -302,7 +301,8 @@ export default function BookSpline({
               willChange: "transform",
             }}
           >
-            <div style={{ width: `${q * 100}%`, height: `${q * 100}%` }}>
+            <div style={{ width: `${q * 100}%`, height: `${q * 100}%` }}
+                 className={[ "bs-mobile-shift" ].join(" ")}>
               <iframe
                 ref={iframeRef}
                 src={embedUrl}
