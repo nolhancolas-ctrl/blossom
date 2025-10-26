@@ -26,7 +26,7 @@ export default function MailingSection() {
         </h2>
 
         {/* Sous-texte */}
-        <p className="text-[0.95rem] sm:text-[1rem] md:text-[1.15rem] text-slate-700/90 leading-relaxed mb-8 sm:mb-10 text-center md:text-justify">
+        <p className="text-[0.95rem] sm:text-[1rem] md:text-[1.15rem] text-slate-700/90 leading-relaxed mb-8 sm:mb-10 text-center text-justify">
           Receive a free gift now, and the first chapter also free later when it’s available — Blossom wallpapers included 🌸
         </p>
 
@@ -35,35 +35,26 @@ export default function MailingSection() {
           onSubmit={(e) => e.preventDefault()}
           className="w-full flex flex-col sm:flex-row items-stretch justify-center gap-3 sm:gap-5"
         >
+
           {/* Champ email */}
           <input
             type="email"
             placeholder="your@email.com"
             className={`
-              glass-button-text
               flex-1 h-14 px-5 rounded-lg md:rounded-xl
-
-              /* 🌸 fond un peu plus opaque pour toujours bien contraster */
-              bg-white/98 md:bg-white/85
+              bg-white/50                      /* ✅ fond blanc 50% opaque */
               backdrop-blur-md md:backdrop-blur-xl backdrop-saturate-150
-
-              /* 🌼 bords blancs nets et permanents */
-              border border-white/75 md:border-white/65
+              border border-white              /* ✅ bord opaque et fin */
               ring-1 ring-white/55 md:ring-white/45
-
-              /* ☀️ douce lueur interne + légère ombre externe */
               shadow-[inset_0_1px_1px_rgba(255,255,255,0.65),0_2px_8px_rgba(0,0,0,0.08)]
-
-              /* ✍️ texte et placeholder bien lisibles */
               text-slate-900 placeholder-slate-500
-
-              /* 💫 interactions premium */
               focus:outline-none focus:ring-2 focus:ring-white/90
               transition-all duration-300
               hover:bg-white hover:shadow-[inset_0_1px_2px_rgba(255,255,255,0.85),0_4px_14px_rgba(0,0,0,0.12)]
             `}
+            style={{ lineHeight: 1 }}
           />
-          
+
           {/* Bouton d’action (noir + shine) */}
           <button
             type="submit"

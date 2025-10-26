@@ -44,48 +44,56 @@ a { color: inherit; text-decoration: none; }
 @media (min-width: 1024px) { .lg\:h-94vhpx { height: calc(var(--vhpx) * 0.94); } }
 
 /* ============================================================
-   3) Layout Rhythm — Sections spacing
-   - Mobile : espacement réduit (~ -2/3)
+   3) Layout Rhythm
    ============================================================ */
 
-/* base (desktop/tablette) */
+/* 0) Header collé en haut */
+.site-header-section {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* 1) Variables globales */
+:root {
+  --gap: 30px;     /* espace entre sections sur desktop */
+  --gap-after-header: 40px; /* juste après le header */
+  --gap-before-footer: 40px; /* dernière section avant le footer */
+}
+
+/* 2) Padding interne léger (facultatif) */
 .site-section {
-  /* ↓ paddings très modestes */
-  padding-block: clamp(0.25rem, 0.8vw, 0.8rem);
+  padding-block: 0; /* mets 0 si tu veux aucun padding interne */
 }
 
-/* supprime tout écart entre deux sections */
-.site-section + .site-section {
-  margin-top: 0;
+/* 3) Supprime marges internes parasites */
+.site-section > :first-child { margin-top: 0 !important; }
+.site-section > :last-child  { margin-bottom: 0 !important; }
+
+/* 4) Rythme global des sections */
+/* 4a) Espace standard entre deux sections */
+.page-main > :is(section, .site-section) + :is(section, .site-section) {
+  margin-top: var(--gap);
 }
 
-/* supprime les marges du premier et dernier enfant pour éviter les doubles espacements */
-.site-section > :first-child {
-  margin-top: 0;
-}
-.site-section > :last-child {
-  margin-bottom: 0;
+/* 4b) Exception — après le header */
+.page-main > .site-header-section + :is(section, .site-section) {
+  margin-top: var(--gap-after-header) !important;
 }
 
-/* Mobile : toujours un peu plus d’air mais cohérent */
+/* 4c) Dernière section avant le footer */
+.page-main > :is(section, .site-section):last-child {
+  margin-bottom: var(--gap-before-footer) !important;
+}
+
+/* ============================================================
+   Mobile (<640px) — espacement fortement réduit
+   ============================================================ */
 @media (max-width: 640px) {
-  .site-section {
-    padding-block: clamp(0.2rem, 1vw, 0.6rem);
+  :root {
+    --gap: 20px;
+    --gap-after-header: 40px;
+    --gap-before-footer: 40px;
   }
-  .site-section + .site-section {
-    margin-top: 0;
-  }
-  .site-section > :last-child { margin-bottom: 0; }
-}
-
-/* Espacement avant le footer — équilibré avec le header */
-main > :is(section, .site-section):last-child {
-  margin-bottom: clamp(2rem, 5vw, 4rem) !important;
-}
-
-/*Extra breathing room before the footer */ 
-.page-main :is(section,.site-section):last-of-type {
-  margin-bottom: clamp(4rem, 8vw, 8rem) !important;
 }
 
 /* ============================================================
@@ -201,6 +209,12 @@ p {
   box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.6), 0 0 12px rgba(255, 255, 255, 0.15);
 }
 
+/* 6.5 - Plus spécifique que .glass-button-text, avec !important */
+#mailing-section input.glass-button-text {
+  background: rgba(255,255,255,0.9) !important;
+  border: 1px solid rgba(255,255,255,1) !important;
+}
+
 /* ============================================================
    7) Animations — Reflection & Shine
    ============================================================ */
@@ -305,4 +319,17 @@ body.splash-fixed {
     --m-pt-pct: 6; --m-pb-pct: 6; --m-mt-pct: 8;
     --m-pt-max: 56px; --m-pb-max: 56px; --m-mt-max: 64px;
   }
+}
+
+/* ============================================================
+   Utility class — remove bottom spacing between posters & CTA
+   ============================================================ */
+.no-poster-gap {
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+/* Réduit l’espace entre posters et CTA dans PosterSection */
+.poster-section .cta-wrapper {
+  margin-top: 0px !important;
 }
