@@ -257,7 +257,7 @@ export default function BookSpline({
               placeItems: "center",
               pointerEvents: "none",
               zIndex: 0,
-              transform: "translateY(13%)",
+              transform: "translateY(15%)",
             }}
           >
             <img
