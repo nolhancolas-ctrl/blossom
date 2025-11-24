@@ -1,9 +1,10 @@
 // app/layout.tsx
 import "./globals.css";
 import type { Metadata } from "next";
-import SplashScreen from "@/components/SplashScreen"; // (client)
-import Footer from "@/components/Footer";             // (peut être server ou client)
-import ViewportHeightSetter from "@/components/ViewportHeightSetter"; // (client)
+
+import SplashScreen from "@/components/visual/SplashScreen"; 
+import Footer from "@/components/layout/Footer"; 
+import ViewportHeightSetter from "@/components/visual/ViewportHeightSetter";
 
 export const metadata: Metadata = {
   title: "Blossom – Le livre",
@@ -14,9 +15,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="fr">
       <body className="min-h-[100svh] antialiased">
+
         {/* Fix mobile VH stable */}
         <ViewportHeightSetter />
-        {/* Splash 2s + fade */}
+
+        {/* Splash screen */}
         <SplashScreen holdMs={400} fadeMs={1200} />
 
         {/* Contenu */}

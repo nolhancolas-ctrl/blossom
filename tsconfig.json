@@ -2,30 +2,40 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-    "@/*": ["./*"]
+      "@/*": [
+        "./*"
+      ]
     },
-    "target": "ES2021",
+    /* Target modern browsers */
+    "target": "ES2022",
     "lib": [
-      "ES2021",
+      "ES2022",
       "DOM",
       "DOM.Iterable"
     ],
-    "allowJs": false,
-    "skipLibCheck": true,
+    /* Type Checking */
     "strict": true,
-    "noEmit": true,
+    "skipLibCheck": true,
+    "types": [],
+    "forceConsistentCasingInFileNames": true,
+    /* Module System (Next.js 15 standard) */
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
+    /* JSX */
     "jsx": "preserve",
+    /* Interop */
+    "esModuleInterop": true,
+    /* Improve speed */
+    "noEmit": true,
     "incremental": true,
+    "allowJs": true,
     "plugins": [
       {
         "name": "next"
       }
-    ],
-    "esModuleInterop": true
+    ]
   },
   "include": [
     "next-env.d.ts",

@@ -1,5 +1,20 @@
 "use client";
 
+/**
+ * FooterOffWhite
+ * ----------------
+ * A soft off-white footer structured into 3 blocks:
+ * 1. “Something to say?” — contact me
+ * 2. “Elsewhere” — social links
+ * 3. “Not about me” — personal message
+ *
+ * Notes:
+ * – Designed with responsive grid (1→2 columns on desktop)
+ * – Subtle off-white background with blur & light borders
+ * – Uses fluid vertical padding via CSS clamp()
+ * – Fully compatible with current project structure
+ */
+
 type Props = {
   className?: string;
   email?: string;
@@ -15,23 +30,32 @@ export default function FooterOffWhite({
       className={`relative z-20 bg-[#f7f5ef] text-slate-800 ${className}`}
       aria-labelledby="footer-title"
     >
-      {/* Ligne séparatrice fine */}
+      {/* ---------------------------------------------------------
+         Top horizontal separator line
+      --------------------------------------------------------- */}
       <div className="absolute top-0 left-5 right-5 h-px bg-black/10 rounded-full" />
 
-      {/* Contenu principal avec padding fluide */}
+      {/* ---------------------------------------------------------
+         MAIN FOOTER WRAPPER — fluid padding + centered content
+      --------------------------------------------------------- */}
       <div
         className="
           mx-auto max-w-6xl px-10 sm:px-12 lg:px-14
           [padding-block:clamp(2rem,5vw,6rem)]
         "
       >
+        {/* -------------------------------------------------------
+           GRID LAYOUT (mobile: 1 column, desktop: 2×2 arrangement)
+        -------------------------------------------------------- */}
         <div
           className="
             grid grid-cols-1 gap-6
             md:grid-cols-2 md:grid-rows-2 md:auto-rows-fr
           "
         >
-          {/* 1️⃣ Something to say */}
+          {/* =======================================================
+             1️⃣ “Something to say?” — Email CTA
+          ======================================================== */}
           <section
             className="
               rounded-2xl border border-black/10 bg-white/70
@@ -42,18 +66,22 @@ export default function FooterOffWhite({
             <h3 className="text-xl font-medium tracking-tight">
               Something to say? I read everything.
             </h3>
+
+            {/* Email CTA button */}
             <a
               href={`mailto:${email}`}
+              aria-label="Send a mail"
               className="
                 inline-flex items-center justify-center gap-2
                 rounded-full border border-black/10 bg-white/90 shadow-sm
                 px-3 py-1 hover:shadow-md transition hover:bg-white
               "
-              aria-label="Send a mail"
             >
               <span className="text-[12px] font-normal text-slate-800 tracking-wide">
                 send me a mail
               </span>
+
+              {/* Small circular icon */}
               <span
                 className="
                   inline-flex h-6 w-6 items-center justify-center
@@ -77,7 +105,9 @@ export default function FooterOffWhite({
             </a>
           </section>
 
-          {/* 2️⃣ Elsewhere */}
+          {/* =======================================================
+             2️⃣ “Elsewhere” — Social links
+          ======================================================== */}
           <section
             className="
               rounded-2xl border border-black/10 bg-white/70
@@ -88,7 +118,10 @@ export default function FooterOffWhite({
             <h3 className="text-xl font-medium tracking-tight">
               Elsewhere around the web.
             </h3>
+
+            {/* Social icons list */}
             <div className="flex flex-wrap justify-center gap-2">
+              {/* Instagram */}
               <a
                 href="https://www.instagram.com/"
                 target="_blank"
@@ -105,6 +138,8 @@ export default function FooterOffWhite({
                 </svg>
                 Instagram
               </a>
+
+              {/* TikTok */}
               <a
                 href="https://www.tiktok.com/"
                 target="_blank"
@@ -124,7 +159,9 @@ export default function FooterOffWhite({
             </div>
           </section>
 
-          {/* 3️⃣ Not about me */}
+          {/* =======================================================
+             3️⃣ “Not about me” — Personal description block
+          ======================================================== */}
           <section
             className="
               rounded-2xl border border-black/10 bg-white/70
@@ -136,6 +173,7 @@ export default function FooterOffWhite({
             <h3 className="text-xl font-medium tracking-tight mb-4 text-center">
               Not about me
             </h3>
+
             <p className="text-slate-800/90 leading-relaxed max-w-prose mx-auto md:mx-0">
               I’m not a growth hacker, not a guru, not a monk. I’m not here to
               optimize your morning routine or preach a perfect method. I’m not
@@ -147,7 +185,9 @@ export default function FooterOffWhite({
           </section>
         </div>
 
-        {/* Bas du footer centré */}
+        {/* -------------------------------------------------------
+           Footer bottom line
+        -------------------------------------------------------- */}
         <div className="mt-8 pt-2 w-full flex items-center justify-center text-center text-xs text-slate-600">
           © {new Date().getFullYear()} Blossom. All rights reserved.
         </div>
