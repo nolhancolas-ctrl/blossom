@@ -1,26 +1,21 @@
 "use client";
-
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import SplineEmbed from "./SplineEmbed";
 
 /**
  * BookHero
  * --------
- * High-level component responsible for:
- * - Responsive scale (desktop / mobile / square interpolation)
- * - Host container (h-55svh / h-76svh / h-94svh)
- * - Decor rendering (blur, center scaling)
- * - Oversize cropping parameters
- * - Passing quality + scale + offsets to <SplineEmbed />
+ * Gère :
+ * - le scale responsive (mobile / tablette / desktop)
+ * - le host container (h-55vhpx / h-76vhpx / h-94vhpx)
+ * - le décor (dorure)
+ * - le crop oversize
  */
-
 export type BookHeroProps = {
   src: string;
-
   // DESIGN DIMENSIONS
   designW?: number;
   designH?: number;
-
   // DECOR
   decorSrc?: string;
   decorScale?: number;
@@ -29,22 +24,18 @@ export type BookHeroProps = {
   decorWidthRatioDesktop?: number;
   decorWidthRatioSquare?: number;
   decorWidthRatioMobile?: number;
-
   // SCALE & LAYOUT
   desktopScalePct?: number;
   maxScaleDesktop?: number;
   maxScaleMobile?: number;
   centerOffsetPct?: number;
-
   // CROP
   extraSideCropPx?: number;
   oversizePct?: number;
-
   // QUALITY
   qualityPctDesktop?: number;
   qualityPctMobile?: number;
   disableDecorBlurOnDesktop?: boolean;
-
   // GENERAL
   interactive?: boolean;
   className?: string;
@@ -55,7 +46,6 @@ export default function BookHero({
   src,
   designW = 1200,
   designH = 700,
-
   // decor
   decorSrc,
   decorBlurPx = 0.1,
@@ -63,22 +53,18 @@ export default function BookHero({
   decorWidthRatioDesktop = 0.55,
   decorWidthRatioSquare = 0.4,
   decorWidthRatioMobile = 0.4,
-
-  // scale
-  desktopScalePct = 0.8,
-  maxScaleDesktop = 0.9,
-  maxScaleMobile = 0.88,
+  // scale (🔁 ajustés pour un livre plus grand)
+  desktopScalePct = 0.9,    // avant 0.8
+  maxScaleDesktop = 1.05,   // avant 0.9
+  maxScaleMobile = 0.98,    // avant 0.88
   centerOffsetPct = 0.48,
-
   // oversize cropping
   extraSideCropPx = 600,
   oversizePct = 1.6,
-
   // quality
   qualityPctDesktop = 0.6,
   qualityPctMobile = 1.0,
   disableDecorBlurOnDesktop = true,
-
   interactive = false,
   className = "",
   style,
@@ -86,6 +72,7 @@ export default function BookHero({
   const hostRef = useRef<HTMLDivElement | null>(null);
   const [scale, setScale] = useState(1);
 
+  // On “fige” la hauteur de référence au premier render (utile pour mobile)
   const vh0Ref = useRef<number>(0);
   useEffect(() => {
     if (!vh0Ref.current) vh0Ref.current = window.innerHeight || 0;
@@ -102,26 +89,35 @@ export default function BookHero({
       const hostW = hostRef.current?.clientWidth ?? window.innerWidth;
       const vw = window.innerWidth;
       const vh = window.innerHeight;
-      const ar = vw / vh;
+      const ar = vw / vh; // aspect ratio écran
 
       const widthFit = hostW / designW;
       const widthFitDesktopReduced = widthFit * desktopScalePct;
 
-      const mobileFit = (vh0Ref.current * 0.6) / designH;
+      // 🔁 Mobile : on utilise plus de hauteur qu’avant (0.75 au lieu de 0.6)
+      const mobileFit = (vh0Ref.current * 0.75) / designH;
 
       let target: number;
       if (ar > 1.05) {
+        // écran plutôt “paysage”
         target = widthFitDesktopReduced;
       } else if (ar < 0.95) {
+        // écran plutôt “portrait” (smartphone)
         target = mobileFit;
       } else {
+        // zone intermédiaire (carrée) → interpolation
         const t = (ar - 0.95) / (1.05 - 0.95);
         target = mobileFit * (1 - t) + widthFitDesktopReduced * t;
       }
 
+      // 🔁 Boost léger pour les écrans moyens (tablette / 13")
+      const isTabletLike = vw >= 768 && vw < 1200;
+      if (isTabletLike) {
+        target *= 1.06; // +6% de taille sur ces écrans
+      }
+
       const cap = ar > 1.05 ? maxScaleDesktop : maxScaleMobile;
       const s = Math.max(0.1, Math.min(cap, target));
-
       setScale((prev) => (Math.abs(prev - s) > 1e-4 ? s : prev));
     };
 
@@ -159,7 +155,6 @@ export default function BookHero({
     const mql = window.matchMedia("(max-width: 1023.98px)");
     const apply = () =>
       setQualityPct(mql.matches ? qualityPctMobile : qualityPctDesktop);
-
     apply();
     mql.addEventListener("change", apply);
     return () => mql.removeEventListener("change", apply);
@@ -171,11 +166,11 @@ export default function BookHero({
   const oversizeCSS = `max(calc(100% + ${
     extraSideCropPx * 2
   }px), ${oversizePct * 100}%)`;
-
   const bookInnerScale = 0.8;
 
   /* ------------------------------- Decor sizing ------------------------------- */
   const displayW = Math.round(designW * scale);
+
   const ar =
     typeof window !== "undefined"
       ? window.innerWidth / (window.innerHeight || 1)

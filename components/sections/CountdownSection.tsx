@@ -1,17 +1,11 @@
 "use client";
-
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
+import { useLang } from "@/hooks/useLang";
 
 /* -------------------------------------------------------------
-   CountdownSection
-   A fully custom animated "glass-card" countdown component.
-   - Counts MONTHS / DAYS / HOURS until a target date.
-   - Uses animated rolling number reels.
-   - Scales responsively based on available width.
-   - Includes a blurred background + glass card shine.
+   CountdownSection — with bilingual labels + readable tag style
 ------------------------------------------------------------- */
-
 export default function Countdown3D({
   target,
   size = "lg",
@@ -21,17 +15,25 @@ export default function Countdown3D({
   size?: "sm" | "md" | "lg";
   className?: string;
 }) {
-  /* ---------- DESIGN SIZES (height of number reels) ---------- */
+  const { lang } = useLang();
+
+  /* Local translations */
+  const labels = {
+    en: { months: "Months", days: "Days", hours: "Hours" },
+    fr: { months: "Mois", days: "Jours", hours: "Heures" },
+  }[lang];
+
+  /* ---------- DESIGN SIZES ---------- */
   const SIZES = {
     sm: { digitH: 44, gap: 12, font: "text-2xl" },
     md: { digitH: 64, gap: 16, font: "text-4xl" },
     lg: { digitH: 88, gap: 18, font: "text-6xl" },
   } as const;
-
   const dims = SIZES[size] || SIZES.lg;
+
   const targetDate = useMemo(() => new Date(target), [target]);
 
-  /* ---------- State: countdown values ---------- */
+  /* ---------- Countdown state ---------- */
   const [{ months, days, hours, done }, setTime] = useState({
     months: 0,
     days: 0,
@@ -39,14 +41,12 @@ export default function Countdown3D({
     done: false,
   });
 
-  /* ---------- Utility: compute remaining M/D/H ---------- */
   function computeRemaining(t: Date) {
     const now = new Date();
     if (t <= now) return { months: 0, days: 0, hours: 0, done: true };
 
     const totalNow = now.getFullYear() * 12 + now.getMonth();
     const totalTgt = t.getFullYear() * 12 + t.getMonth();
-
     let months = totalTgt - totalNow;
 
     let anchor = new Date(now);
@@ -64,6 +64,7 @@ export default function Countdown3D({
 
     const days = Math.floor(diffMs / DAY);
     diffMs -= days * DAY;
+
     const hours = Math.floor(diffMs / HOUR);
 
     return {
@@ -74,17 +75,13 @@ export default function Countdown3D({
     };
   }
 
-  /* ---------- Timer tick ---------- */
+  /* ---------- Timer ---------- */
   const [isClient, setIsClient] = useState(false);
   useEffect(() => setIsClient(true), []);
 
   useEffect(() => {
     if (!isClient) return;
-
-    const tick = () => {
-      setTime(computeRemaining(targetDate));
-    };
-
+    const tick = () => setTime(computeRemaining(targetDate));
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
@@ -96,13 +93,11 @@ export default function Countdown3D({
 
   useEffect(() => {
     const DESIGN_W = 800;
-
     const update = () => {
       if (!hostRef.current) return;
       const w = hostRef.current.clientWidth;
       setScale(Math.min(1, Math.max(0.6, w / DESIGN_W)));
     };
-
     update();
 
     const ro = new ResizeObserver(update);
@@ -118,11 +113,8 @@ export default function Countdown3D({
 
   return (
     <section className={`w-full ${className}`}>
-      {/* Outer limit width */}
       <div className="mx-auto w-full max-w-4xl px-14 sm:px-10">
-        {/* Host measuring width */}
         <div ref={hostRef} className="relative w-full">
-          {/* Reserve vertical space to prevent layout shifts */}
           <div
             className="relative mx-auto"
             style={{ height: `${260 * scale}px`, width: "100%" }}
@@ -136,7 +128,6 @@ export default function Countdown3D({
                 transformOrigin: "top center",
               }}
             >
-              {/* Glass card wrapper */}
               <GlassCard>
                 <CounterRows
                   dims={dims}
@@ -144,10 +135,10 @@ export default function Countdown3D({
                   days={days}
                   hours={hours}
                   done={done}
+                  labels={labels}
                 />
               </GlassCard>
 
-              {/* Soft ground shadow */}
               <div
                 aria-hidden
                 className="absolute -z-10"
@@ -170,9 +161,8 @@ export default function Countdown3D({
 }
 
 /* -------------------------------------------------------------
-   Sub-components
+   Glass card
 ------------------------------------------------------------- */
-
 function GlassCard({ children }: { children: React.ReactNode }) {
   return (
     <div
@@ -184,7 +174,6 @@ function GlassCard({ children }: { children: React.ReactNode }) {
           "0 20px 50px rgba(0,0,0,0.12), inset 0 0.5px 0 rgba(255,255,255,0.35)",
       }}
     >
-      {/* Border sweep effect */}
       <span
         aria-hidden
         className="pointer-events-none absolute inset-0 rounded-2xl"
@@ -201,8 +190,6 @@ function GlassCard({ children }: { children: React.ReactNode }) {
           filter: "blur(0.2px)",
         }}
       />
-
-      {/* Blurred background image */}
       <div
         aria-hidden
         className="absolute inset-0 pointer-events-none"
@@ -214,39 +201,46 @@ function GlassCard({ children }: { children: React.ReactNode }) {
           transform: "scale(1.02)",
         }}
       />
-
       <div className="relative z-10">{children}</div>
     </div>
   );
 }
 
+/* -------------------------------------------------------------
+   Rows of counters
+------------------------------------------------------------- */
 function CounterRows({
   dims,
   months,
   days,
   hours,
   done,
+  labels,
 }: {
-  dims: { digitH: number; gap: number; font: string };
+  dims: any;
   months: number;
   days: number;
   hours: number;
   done: boolean;
+  labels: { months: string; days: string; hours: string };
 }) {
   return (
     <div
       className="flex items-center justify-center flex-wrap"
       style={{ gap: dims.gap, padding: "24px 20px" }}
     >
-      <DigitBlock label="Months" value={months} dims={dims} />
+      <DigitBlock label={labels.months} value={months} dims={dims} />
       <Separator dims={dims} />
-      <DigitBlock label="Days" value={days} dims={dims} />
+      <DigitBlock label={labels.days} value={days} dims={dims} />
       <Separator dims={dims} />
-      <DigitBlock label="Hours" value={hours} dims={dims} />
+      <DigitBlock label={labels.hours} value={hours} dims={dims} />
     </div>
   );
 }
 
+/* -------------------------------------------------------------
+   Digit block with NEW BG TAGS for labels
+------------------------------------------------------------- */
 function DigitBlock({
   label,
   value,
@@ -254,25 +248,32 @@ function DigitBlock({
 }: {
   label: string;
   value: number;
-  dims: { digitH: number; gap: number; font: string };
+  dims: any;
 }) {
   return (
     <div className="flex flex-col items-center gap-2">
       <TwoDigits num={value % 100} height={dims.digitH} />
-      <span className="uppercase tracking-wide text-[10px] text-slate-700">
+
+      {/* 🔥 New readable label background */}
+      <span
+        className="
+          uppercase tracking-wide text-[10px] text-slate-800 px-2 py-[2px]
+          rounded-full bg-white/60 backdrop-blur-sm border border-white/40
+          shadow-sm
+        "
+      >
         {label}
       </span>
     </div>
   );
 }
 
-function Separator({ dims }: { dims: { font: string } }) {
+/* Digit reels + separator remain unchanged */
+function Separator({ dims }: { dims: any }) {
   return (
     <div className={`${dims.font} text-slate-500 select-none px-1`}>:</div>
   );
 }
-
-/* ---------- Rolling digit reels ---------- */
 
 function TwoDigits({ num, height }: { num: number; height: number }) {
   const tens = Math.floor(num / 10);

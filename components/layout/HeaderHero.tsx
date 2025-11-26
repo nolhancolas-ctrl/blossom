@@ -2,12 +2,29 @@
 "use client";
 
 import Image from "next/image";
+import Navbar from "./Navbar";
 
 export default function HeaderHero() {
   return (
-    <section className="site-section site-header-section relative z-10">
-      {/* Desktop */}
-      <div className="hidden sm:block w-screen overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.15)]">
+    <header
+      className="
+        relative w-full 
+        z-[5000]      /* assez haut pour passer au-dessus du parallax */
+        overflow-hidden
+      "
+    >
+      {/* NAVBAR OVERLAY */}
+      <div
+        className="
+          absolute top-4 right-4 
+          z-[9999]
+        "
+      >
+        <Navbar />
+      </div>
+
+      {/* DESKTOP IMAGE */}
+      <div className="hidden sm:block w-full overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.15)]">
         <Image
           src="/header_wide.jpg"
           alt="Blossom header wide"
@@ -18,8 +35,8 @@ export default function HeaderHero() {
         />
       </div>
 
-      {/* Mobile */}
-      <div className="block sm:hidden w-screen overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.15)]">
+      {/* MOBILE IMAGE */}
+      <div className="block sm:hidden w-full overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.15)]">
         <Image
           src="/header_small.jpg"
           alt="Blossom header small"
@@ -29,6 +46,6 @@ export default function HeaderHero() {
           priority
         />
       </div>
-    </section>
+    </header>
   );
 }

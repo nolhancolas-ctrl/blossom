@@ -52,23 +52,60 @@ a {
 }
 
 /* ============================================================
+   BookHero — stable responsive scaling
+   ============================================================ */
+
+.bookhero-host {
+  width: 1200px;               /* design width */
+  height: 700px;               /* design height */
+  position: relative;
+}
+
+.bookhero-decor {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 130%;                 /* décor lié à la taille du livre */
+  height: auto;
+  object-fit: contain;
+  opacity: 0.9;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.bookhero-host iframe,
+.bookhero-host canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;                  /* book over decor */
+  pointer-events: none;
+}
+
+/* ============================================================
    3) Stable viewport height (used by BookHero)
    ============================================================ */
 :root {
   --vhpx: 100vh;
-  --section-gap-desktop: 120px;
-  --section-gap-mobile: 40px;
+  --section-gap-desktop: 80px;
+  --section-gap-mobile: 20px;
 }
 
-/* BookHero uses ONLY these */
+/* BookHero — 3 vrais paliers responsives */
 .h-55vhpx {
-  height: calc(var(--vhpx) * 0.75);
+  /* Mobile (base) : ~80% de la hauteur */
+  height: calc(var(--vhpx) * 0.6);
 }
+
 .h-76vhpx {
-  height: calc(var(--vhpx) * 0.96);
+  /* Medium (md:) : plus haut → livre plus présent */
+  height: calc(var(--vhpx) * 0.88);
 }
+
 .h-94vhpx {
-  height: calc(var(--vhpx) * 0.94);
+  /* Large (lg:) : quasi plein écran */
+  height: calc(var(--vhpx) * 0.95);
 }
 
 /* ============================================================
