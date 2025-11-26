@@ -1,20 +1,19 @@
 /* ------------------------------------------------------------
-   Tailwind layers (doivent TOUJOURS être au tout début)
+   0) Tailwind layers (toujours au début)
 ------------------------------------------------------------ */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* ------------------------------------------------------------
-   Google Fonts
+   1) Fonts
 ------------------------------------------------------------ */
 @import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap");
 
 /* ============================================================
-   1) Base reset & body
+   2) Reset global & body
    ============================================================ */
-   
 *,
 *::before,
 *::after {
@@ -53,55 +52,29 @@ a {
 }
 
 /* ============================================================
-   2) Stable viewport height (used by ViewportHeightSetter)
+   3) Stable viewport height (used by BookHero)
    ============================================================ */
-
 :root {
-  /* Set by ViewportHeightSetter in JS to fix mobile URL bar issues */
   --vhpx: 100vh;
-
-  /* Default vertical rhythm between sections (when PageSection is not used) */
   --section-gap-desktop: 120px;
   --section-gap-mobile: 40px;
 }
 
-/* Old helper classes that rely on --vhpx */
+/* BookHero uses ONLY these */
 .h-55vhpx {
-  height: calc(var(--vhpx) * 0.55);
-}
-.h-60vhpx {
-  height: calc(var(--vhpx) * 0.6);
-}
-.h-70vhpx {
-  height: calc(var(--vhpx) * 0.7);
+  height: calc(var(--vhpx) * 0.75);
 }
 .h-76vhpx {
-  height: calc(var(--vhpx) * 0.76);
-}
-.h-90vhpx {
-  height: calc(var(--vhpx) * 0.9);
+  height: calc(var(--vhpx) * 0.96);
 }
 .h-94vhpx {
   height: calc(var(--vhpx) * 0.94);
 }
 
-@media (min-width: 768px) {
-  .md\:h-76vhpx {
-    height: calc(var(--vhpx) * 0.76);
-  }
-}
-
-@media (min-width: 1024px) {
-  .lg\:h-94vhpx {
-    height: calc(var(--vhpx) * 0.94);
-  }
-}
-
 /* ============================================================
-   3) Global layout rhythm
+   4) Global layout rhythm
    ============================================================ */
-
-/* Default spacing between top-level sections in <main class="page-main"> */
+/* Default spacing between sections */
 .page-main > section + section {
   margin-top: var(--section-gap-desktop);
 }
@@ -112,66 +85,15 @@ a {
   }
 }
 
-/* Header section flush to top */
+/* Header image flush */
 .site-header-section {
   padding: 0 !important;
   margin: 0 !important;
 }
 
-/* Small mobile clamp helper for legacy sections (optional) */
-@media (max-width: 1023.98px) {
-  .m-clamp {
-    --m-pt-pct: 3;
-    --m-pb-pct: 3;
-    --m-mt-pct: 4;
-
-    --m-pt-min: 0px;
-    --m-pt-max: 28px;
-    --m-pb-min: 0px;
-    --m-pb-max: 28px;
-    --m-mt-min: 8px;
-    --m-mt-max: 40px;
-
-    padding-top: clamp(
-      var(--m-pt-min),
-      calc(var(--m-pt-pct) * 1vw),
-      var(--m-pt-max)
-    );
-    padding-bottom: clamp(
-      var(--m-pb-min),
-      calc(var(--m-pb-pct) * 1vw),
-      var(--m-pb-max)
-    );
-    margin-top: clamp(
-      var(--m-mt-min),
-      calc(var(--m-mt-pct) * 1vw),
-      var(--m-mt-max)
-    );
-  }
-
-  .m-clamp--tight {
-    --m-pt-pct: 1.2;
-    --m-pb-pct: 1.2;
-    --m-mt-pct: 2.4;
-    --m-pt-max: 12px;
-    --m-pb-max: 12px;
-    --m-mt-max: 20px;
-  }
-
-  .m-clamp--loose {
-    --m-pt-pct: 6;
-    --m-pb-pct: 6;
-    --m-mt-pct: 8;
-    --m-pt-max: 56px;
-    --m-pb-max: 56px;
-    --m-mt-max: 64px;
-  }
-}
-
 /* ============================================================
-   4) Typography
+   5) Typography
    ============================================================ */
-
 h1,
 h2,
 h3,
@@ -211,33 +133,7 @@ p {
 }
 
 /* ============================================================
-   5) Counter responsive scaling (legacy helper)
-   ============================================================ */
-
-.counter-scale {
-  --counter-scale: 1;
-}
-
-@media (max-aspect-ratio: 1 / 1) {
-  .counter-scale {
-    --counter-scale: 0.92;
-  }
-}
-
-@media (max-width: 480px) {
-  .counter-scale {
-    --counter-scale: 0.62;
-  }
-}
-
-@media (max-width: 380px) {
-  .counter-scale {
-    --counter-scale: 0.54;
-  }
-}
-
-/* ============================================================
-   6) Glass buttons (for any legacy usage)
+   6) Glass Buttons (used by Input + CTA Buttons)
    ============================================================ */
 
 .glass-button-text {
@@ -251,13 +147,6 @@ p {
   font-size: clamp(0.9rem, 1vw + 0.35rem, 1.05rem);
   background: transparent !important;
   border: none;
-  outline: none;
-  box-shadow: none;
-}
-
-.glass-button-text:focus {
-  outline: none;
-  box-shadow: none;
 }
 
 .glass-button-text::placeholder {
@@ -277,10 +166,8 @@ p {
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   color: #000;
-  font-size: 1rem;
   font-weight: 400;
   letter-spacing: 0.01em;
-  text-align: center;
   box-shadow:
     inset 0 0.5px 0 rgba(255, 255, 255, 0.2),
     0 0 6px rgba(0, 0, 0, 0.08);
@@ -305,7 +192,6 @@ p {
   );
   opacity: 0.45;
   animation: reflection 6s linear infinite;
-  pointer-events: none;
 }
 
 /* Inner glow */
@@ -318,9 +204,7 @@ p {
   background: rgba(255, 255, 255, 0.28);
   filter: blur(10px);
   opacity: 0.22;
-  transition:
-    opacity 0.5s ease,
-    filter 0.5s ease;
+  transition: opacity 0.5s ease, filter 0.5s ease;
 }
 
 .glass-button:hover::after,
@@ -329,11 +213,9 @@ p {
   filter: blur(12px);
 }
 
-/* Rectangular variant */
+/* Rectangular */
 .glass-button {
   padding: 0.75rem 2rem;
-  width: auto;
-  max-width: none;
 }
 
 .glass-button:hover {
@@ -346,37 +228,26 @@ p {
 
 .glass-button:active {
   transform: scale(0.97);
-  box-shadow:
-    inset 0 1px 2px rgba(255, 255, 255, 0.55),
-    0 0 12px rgba(255, 255, 255, 0.15);
 }
 
-/* Circular variant (play/submit) */
+/* Circular */
 .glass-button-circle {
-  aspect-ratio: 1 / 1;
+  aspect-ratio: 1;
   height: 3.25rem;
   cursor: pointer;
 }
 
 .glass-button-circle:hover {
   transform: scale(1.05);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.5),
-    0 0 22px rgba(255, 255, 255, 0.22);
-  background: rgba(255, 255, 255, 0.3);
 }
 
 .glass-button-circle:active {
   transform: scale(0.97);
-  box-shadow:
-    inset 0 1px 2px rgba(255, 255, 255, 0.6),
-    0 0 12px rgba(255, 255, 255, 0.15);
 }
 
 /* ============================================================
-   7) Animations (reflection + button shine)
+   7) Animations
    ============================================================ */
-
 @keyframes reflection {
   0% {
     transform: translateX(-100%);
@@ -386,7 +257,6 @@ p {
   }
 }
 
-/* Used by black CTA buttons in MailingSection / Poster CTA */
 @keyframes buttonShine {
   0% {
     transform: translateX(-120%);
@@ -409,23 +279,8 @@ p {
 }
 
 /* ============================================================
-   8) Poster utilities (legacy)
+   8) BookHero Helpers
    ============================================================ */
-
-.no-poster-gap {
-  margin-bottom: 0 !important;
-  padding-bottom: 0 !important;
-}
-
-.poster-section .cta-wrapper {
-  margin-top: 0 !important;
-}
-
-/* ============================================================
-   9) Misc helpers
-   ============================================================ */
-
-/* Old mobile vertical shift used for fine-tuning BookSpline */
 @media (max-width: 1023.98px) {
   .bs-mobile-shift {
     transform: translateY(110px);

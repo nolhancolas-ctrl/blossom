@@ -17,10 +17,6 @@ export default function PageSection({
 }: PageSectionProps) {
   const vertical = (() => {
     switch (variant) {
-      case "hero":
-        return "py-6 sm:py-6";
-      case "tight":
-        return "py-6 sm:py-10";
       default:
         return "py-8 sm:py-10";
     }

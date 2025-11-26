@@ -2,11 +2,15 @@
 import { useEffect, useRef, useState } from "react";
 
 /**
- * 🌸 ParallaxBg — version corrigée
- * - Parfaite continuité du bas vers le haut
- * - Aucun jump sur mobile
- * - Ratio stable même si le contenu change
+ * 🌸 ParallaxBg (version finale)
+ *
+ * ✔ Utilise small/big selon aspect-ratio
+ * ✔ Aucun saut sur mobile (hauteur stable via --vhpx)
+ * ✔ Bas du fond collé au bas de l’écran au scroll=0
+ * ✔ Haut du fond collé au haut de l’écran au scroll max
+ * ✔ Fond monte quand on scroll →
  */
+
 export default function ParallaxBg({
   small = "/background_small.jpg",
   big = "/background_big.jpg",
@@ -14,77 +18,100 @@ export default function ParallaxBg({
   small?: string;
   big?: string;
 }) {
-  const [src, setSrc] = useState(big);
+  const [src, setSrc] = useState(small);
   const [offset, setOffset] = useState(0);
-  const [ratio, setRatio] = useState(1);
+  const imgRef = useRef<HTMLImageElement | null>(null);
 
-  const imgRef = useRef<HTMLImageElement>(null);
+  const metricsRef = useRef({
+    delta: 0,     // distance totale à parcourir
+    scrollMax: 1, // scroll total "utile"
+  });
 
-  /* -------------------------------------------------------
-   * 1) Choose small/big depending on aspect ratio
+  /** -------------------------------------------------------
+   * 0) Sélection dynamique small/big selon aspect ratio
    * ------------------------------------------------------ */
   useEffect(() => {
-    const mq = window.matchMedia("(max-aspect-ratio: 1/1)");
-    const update = () => setSrc(mq.matches ? small : big);
+    const mql = window.matchMedia("(max-aspect-ratio: 1/1)");
+    const update = () => {
+      setSrc(mql.matches ? small : big);
+    };
     update();
-    mq.addEventListener("change", update);
-    return () => mq.removeEventListener("change", update);
+    mql.addEventListener("change", update);
+    return () => mql.removeEventListener("change", update);
   }, [small, big]);
 
-  /* -------------------------------------------------------
-   * 2) Compute image travel distance (delta) & scroll span
+  /** -------------------------------------------------------
+   * 1) Calcule la hauteur image vs hauteur viewport stable
    * ------------------------------------------------------ */
-  const computeRatio = () => {
+  const recomputeMetrics = () => {
     const img = imgRef.current;
-    if (!img) return;
+    if (!img || typeof window === "undefined") return;
 
-    const vw = window.innerWidth;
-    const vh = window.innerHeight; // visible viewport height
-    const bodyH = document.documentElement.scrollHeight; // more stable than body.scrollHeight
+    const vw = window.innerWidth || 1;
+    const vhStable = parseFloat(
+      getComputedStyle(document.documentElement).getPropertyValue("--vhpx")
+    ) || window.innerHeight;
 
     const natRatio =
       (img.naturalHeight || 1) / (img.naturalWidth || 1);
 
-    const imgH = vw * natRatio; // rendered height
-    const delta = Math.max(0, imgH - vh); // how much image must move
+    const imgH = vw * natRatio;        // rendu final
+    const delta = Math.max(0, imgH - vhStable);
 
-    const scrollSpan = Math.max(1, bodyH - vh); // usable scroll
+    const docH = document.documentElement.scrollHeight;
+    const scrollMax = Math.max(1, docH - vhStable);
 
-    setRatio(delta / scrollSpan);
+    metricsRef.current = { delta, scrollMax };
+
+    // recalcul de l'offset courant
+    const y = window.scrollY || 0;
+    const t = Math.max(0, Math.min(1, y / scrollMax));
+    setOffset(-delta * t);
   };
 
+  /** -------------------------------------------------------
+   * 2) Setup sur load + resize
+   * ------------------------------------------------------ */
   useEffect(() => {
     const img = imgRef.current;
-    if (!img) return;
 
-    if (img.complete) computeRatio();
-    else img.addEventListener("load", computeRatio);
+    if (img) {
+      if (img.complete) recomputeMetrics();
+      else img.addEventListener("load", recomputeMetrics);
+    }
 
-    window.addEventListener("resize", computeRatio);
-    window.addEventListener("orientationchange", computeRatio);
+    window.addEventListener("resize", recomputeMetrics);
+    window.addEventListener("orientationchange", recomputeMetrics);
+
+    // recalcul différé après layout
+    const id = setTimeout(recomputeMetrics, 500);
 
     return () => {
-      img.removeEventListener("load", computeRatio);
-      window.removeEventListener("resize", computeRatio);
-      window.removeEventListener("orientationchange", computeRatio);
+      img?.removeEventListener("load", recomputeMetrics);
+      window.removeEventListener("resize", recomputeMetrics);
+      window.removeEventListener("orientationchange", recomputeMetrics);
+      clearTimeout(id);
     };
   }, [src]);
 
-  /* -------------------------------------------------------
-   * 3) Scroll → translate based on ratio
+  /** -------------------------------------------------------
+   * 3) Scroll → on fait monter le fond
    * ------------------------------------------------------ */
   useEffect(() => {
-    const updateOffset = () => {
+    const onScroll = () => {
+      const { delta, scrollMax } = metricsRef.current;
       const y = window.scrollY || 0;
-      setOffset(y * ratio);
+      const t = Math.max(0, Math.min(1, y / scrollMax));
+      setOffset(-delta * t); // <— fond MONTE quand on scroll
     };
-    updateOffset();
-    window.addEventListener("scroll", updateOffset, { passive: true });
-    return () => window.removeEventListener("scroll", updateOffset);
-  }, [ratio]);
 
-  /* -------------------------------------------------------
-   * 4) Render bottom-aligned parallax image
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  /** -------------------------------------------------------
+   * 4) Rendu
    * ------------------------------------------------------ */
   return (
     <div
@@ -101,7 +128,7 @@ export default function ParallaxBg({
         style={{
           position: "absolute",
           inset: 0,
-          transform: `translateY(${offset}px)`,
+          transform: `translateY(${-offset}px)`,
           willChange: "transform",
         }}
       >
@@ -111,10 +138,11 @@ export default function ParallaxBg({
           alt=""
           style={{
             position: "absolute",
-            bottom: 0, // start perfectly bottom-aligned
+            bottom: 0,  // scroll=0 → bas collé
             left: 0,
             width: "100%",
             height: "auto",
+            display: "block",
             objectFit: "cover",
             objectPosition: "center bottom",
           }}

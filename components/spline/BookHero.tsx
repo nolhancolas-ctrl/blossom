@@ -203,7 +203,7 @@ export default function BookHero({
   return (
     <section
       className={[
-        "relative z-0 w-full flex flex-col items-center justify-center overflow-hidden m-clamp",
+        "relative z-0 w-full flex flex-col items-center justify-center overflow-hidden",
         className,
       ].join(" ")}
       style={style}
