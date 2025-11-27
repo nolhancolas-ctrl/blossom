@@ -27,6 +27,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             `,
           }}
         />
+        
+        {/* visibleAdd CSS Paint Worklet for title mask (required for text-only shine */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('paintWorklet' in CSS) {
+                CSS.paintWorklet.addModule('/title-mask.js');
+              }
+            `,
+          }}
+        />
 
         <LangProvider>
           

@@ -43,7 +43,7 @@ export default function FooterOffWhite({
       tiktok: "TikTok",
 
       aboutTitle: "À propos (ou presque)",
-      aboutText: `Je ne suis pas un “growth hacker”, pas un gourou, pas un moine. Je ne suis pas là pour optimiser tes routines ou vendre une méthode miracle. Je ne suis ni une machine à productivité, ni une marque déguisée.Je dessine, j’apprends, je partage. C’est tout. Et pour décevoir un peu ma grand-mère : même diplômé, je ne suis clairement pas un ingénieur.`,
+      aboutText: `Je ne suis pas un hacker aguérit, pas un gourou, pas un moine. Je ne suis pas là pour optimiser tes routines ou vendre une méthode miracle. Je ne suis ni une machine à productivité, ni une marque déguisée.Je dessine, j’apprends, je partage. C’est tout. Et pour décevoir un peu ma grand-mère : même diplômé, je ne suis clairement pas un ingénieur.`,
 
       rights: "Tous droits réservés.",
     },
@@ -52,7 +52,7 @@ export default function FooterOffWhite({
   return (
     <footer
       data-site-footer
-      className={`relative z-20 bg-[#f7f5ef] text-slate-800 ${className}`}
+      className={`pt-10 relative z-20 bg-[#f7f5ef] text-slate-800 ${className}`}
       aria-labelledby="footer-title"
     >
       {/* Top separator */}

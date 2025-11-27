@@ -29,6 +29,7 @@ export default function PageSection({
         "site-section relative flex w-full items-center justify-center",
         "px-11 sm:px-10 lg:px-14",
         vertical,
+        "last:mb-24",     // ⬅️ AJOUTÉ : double l’espace avant le footer
         className
       )}
     >

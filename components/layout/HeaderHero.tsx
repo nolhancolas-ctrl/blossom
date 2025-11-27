@@ -9,7 +9,7 @@ export default function HeaderHero() {
     <header
       className="
         relative w-full 
-        z-[5000]      /* assez haut pour passer au-dessus du parallax */
+        z-[500]      /* assez haut pour passer au-dessus du parallax */
         overflow-hidden
       "
     >

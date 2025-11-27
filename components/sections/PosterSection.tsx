@@ -17,7 +17,7 @@ export default function PosterSection({
   leftSrc,
   rightSrc,
   title,
-  ctaHref = "/poster",
+  ctaHref = "/shop/collection",
   interactive = false,
 }: Props) {
   const { lang } = useLang(); // fr or en

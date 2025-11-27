@@ -1,5 +1,4 @@
 "use client";
-
 import { useState } from "react";
 import Link from "next/link";
 import { useLang } from "@/hooks/useLang";
@@ -22,13 +21,9 @@ export default function Navbar() {
   ];
 
   return (
-    <nav
-      className="
-        fixed top-4 right-4 z-50
-        flex items-center justify-end
-      "
-    >
-      {/* Hamburger button */}
+    <nav className="fixed top-4 right-4 z-50 flex items-center justify-end">
+      
+      {/* Hamburger */}
       <button
         onClick={() => setOpen((prev) => !prev)}
         className="
@@ -42,36 +37,51 @@ export default function Navbar() {
         <Menu size={22} className="text-slate-700" />
       </button>
 
-      {/* Dropdown Menu */}
+      {/* Menu */}
       <div
         className={`
-          absolute top-14 right-0
-          w-48
+          absolute top-14 right-0 w-48
           bg-white/80 backdrop-blur-xl
           shadow-xl rounded-xl border border-white/40
-          transition-all duration-300
-          overflow-hidden
+          transition-all duration-300 overflow-hidden
           ${open ? "opacity-100 scale-100" : "opacity-0 scale-90 pointer-events-none"}
         `}
       >
-        {/* MENU ITEMS */}
         <ul className="flex flex-col py-2">
-          {menuItems.map((item) => (
-            <li key={item.href}>
-            <Link 
-                href={item.href as any}
-                onClick={() => setOpen(false)}
-                className="
-                  flex items-center gap-3 px-4 py-3
-                  text-slate-700 hover:bg-slate-100/60
-                  transition rounded-md
-                "
-              >
-                <item.icon size={18} className="text-slate-600" />
-                <span>{item.label}</span>
-              </Link>
-            </li>
-          ))}
+
+          {/* HOME (force reload) */}
+          <li>
+            <button
+              onClick={() => {
+                setOpen(false);
+                window.location.href = "/";  // ⬅️ reload forcé
+              }}
+              className="
+                w-full text-left flex items-center gap-3 px-4 py-3
+                text-slate-700 hover:bg-slate-100/60
+                transition rounded-md
+              "
+            >
+              <Home size={18} className="text-slate-600" />
+              <span>{lang === "en" ? "Home" : "Accueil"}</span>
+            </button>
+          </li>
+
+          {/* POSTERS (navigation normale, pas de reload) */}
+          <li>
+            <Link
+              href="/shop"
+              onClick={() => setOpen(false)}
+              className="
+                flex items-center gap-3 px-4 py-3
+                text-slate-700 hover:bg-slate-100/60
+                transition rounded-md
+              "
+            >
+              <ImageIcon size={18} className="text-slate-600" />
+              <span>{lang === "en" ? "Posters" : "Posters"}</span>
+            </Link>
+          </li>
 
           {/* LANGUAGE SWITCH */}
           <li>
@@ -90,6 +100,7 @@ export default function Navbar() {
               <span>{lang === "en" ? "Français" : "English"}</span>
             </button>
           </li>
+
         </ul>
       </div>
     </nav>

@@ -11,6 +11,42 @@
 @import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap");
 
+/* Premium serif */
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&display=swap");
+
+/* ---------------------------
+   REAL TEXT-ONLY SHINE EFFECT
+   (no background affected)
+--------------------------- */
+.fancy-title {
+  font-family: "Playfair Display", serif;
+  font-weight: 600;
+  position: relative;
+  display: inline-block;
+  background: linear-gradient(
+    120deg,
+    #1e293b 0%,     /* slate-800 */
+    #1e293b 40%,
+    #ffffff 55%,    /* shine highlight */
+    #1e293b 70%,
+    #1e293b 100%
+  );
+  background-size: 300% 100%;
+
+  /* KEY PART — shine applies ONLY to text */
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+
+  /* Slow infinite shimmer */
+  animation: fancyShine 6s ease-in-out infinite;
+}
+
+@keyframes fancyShine {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -100% 0; }
+}
+
 /* ============================================================
    2) Reset global & body
    ============================================================ */
@@ -322,4 +358,69 @@ p {
   .bs-mobile-shift {
     transform: translateY(110px);
   }
+}
+
+/* ============================================================
+   Collections marquee
+   ============================================================ */
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* Empêche TOUT arrêt du scroll */
+.carousel-track {
+  animation-play-state: running !important;
+}
+
+.carousel-track:hover {
+  animation-play-state: running !important;
+}
+
+/* ============================
+   ZOOM MODE — Hide header & footer PROPREMENT
+============================ */
+html.zoom-open header,
+body.zoom-open header,
+html.zoom-open footer,
+body.zoom-open footer,
+html.zoom-open nav,
+body.zoom-open nav,
+html.zoom-open .site-header,
+body.zoom-open .site-header,
+html.zoom-open .site-header-section,
+body.zoom-open .site-header-section {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  z-index: -999 !important;
+  position: relative !important;
+}
+
+/* ============================================================
+   9) Dual-tone text effect
+   ============================================================ */
+.dual-label {
+  display: inline-block;
+  background: linear-gradient(
+    120deg,
+    #1e293b 0%,     /* slate-800 */
+    #1e293b 35%,
+    #ffffff 50%,    /* highlight */
+    #1e293b 65%,
+    #1e293b 100%
+  );
+  background-size: 260% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: dualTextShine 5s ease-in-out infinite;
+}
+
+@keyframes dualTextShine {
+  0%   { background-position: 180% 0; }
+  100% { background-position: -80% 0; }
 }
