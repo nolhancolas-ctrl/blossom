@@ -58,7 +58,10 @@ export default function Home() {
         <PosterSection
           leftSrc="https://my.spline.design/postercalathea-moCyI7RjYjeYDAemgq7igMGk/"
           rightSrc="https://my.spline.design/posterstrelitzia-nESCAFDnDYjmeiSdHTA4tqkc/"
-          title="If you cannot take care of a plant, print one :)"
+          title={{
+              en: "If you cannot take care of a plant, print one! 🌼",
+              fr: "Si tu ne peux pas t’occuper d’une plante, imprime-en une ! 🌼",
+            }}
           ctaHref="/shop"
         />
       </div>

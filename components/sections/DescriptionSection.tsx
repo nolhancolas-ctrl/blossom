@@ -12,19 +12,19 @@ export default function DescriptionSection() {
     fr: {
       descriptionTitle: "À propos du livre",
       descriptionText: [
-        "Nous vivons entourés de plantes sans vraiment savoir comment elles fonctionnent. Blossom t’ouvre cet univers simplement, sans jargon.",
-        "Tu y découvres comment une plante respire, boit, cherche la lumière, pourquoi certaines grandissent vite et d’autres s’épuisent. Ce n’est pas un cours : juste une manière de regarder le vivant autrement.",
-        "Chapitre après chapitre, tu apprends à repérer les signes essentiels — soif, chaleur, lumière, bien-être.",
-        "Blossom, c’est apprendre à comprendre les plantes… et à mieux vivre avec elles."
+        "Tu ne t’es jamais demandé ce que sont vraiment toutes les plantes autour de toi ? 🌿",
+        "Parce que moi si — leurs noms, leurs origines, pourquoi elles poussent de façons si différentes… et crois-moi, la réponse est parfois sureprenante... ☀️", 
+        "Blossom traverse cette diversité : feuilles de jungle, petites alpines, plantes de désert, grandes grimpantes ou épyphytes à fleurs… 🪴", 
+        "Il existe tellement de beauté qui pour la plupart des gens reste un mystère, alors sois curieux ! ✨",
       ]
     },
     en: {
       descriptionTitle: "About the book",
       descriptionText: [
-        "We live surrounded by plants without really knowing how they work. Blossom opens this world simply, without jargon.",
-        "You discover how a plant breathes, drinks, seeks light — why some grow fast and others struggle. It's not a lesson: just a new way to look at living things.",
-        "Chapter by chapter, you learn key signs — thirst, heat, light, well-being.",
-        "Blossom is about understanding plants… and learning to live better with them."
+        "Have you ever wondered what all the plants around you really are? 🌿",
+        "Because I have — their names, their origins, why they grow in such different ways… and believe me, the answer is sometimes surprising... ☀️", 
+        "Blossom walks through this diversity: jungle leaves, tiny alpine plants, desert species, tall climbers or flowering epiphytes… 🪴", 
+        "There is so much beauty that, for most people, remains a mystery, so stay curious! ✨",
       ]
     }
   };

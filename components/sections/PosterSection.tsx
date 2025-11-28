@@ -8,7 +8,10 @@ import { useLang } from "@/hooks/useLang";
 type Props = {
   leftSrc: string;
   rightSrc: string;
-  title: string;
+  title: {
+    en: string;
+    fr: string;
+  };
   ctaHref?: string;
   interactive?: boolean;
 };
@@ -25,13 +28,17 @@ export default function PosterSection({
   // Traductions locales
   const translations = {
     fr: {
-      description:
-        "Disponibles en tirages papier haute qualité ou en posters métalliques premium Displate — parfaits pour apporter un peu de botanique à n’importe quel espace.",
+      description: [
+        "Disponible en tirages papier de haute qualité ou en posters métal via Displate, avec leur système d’accroche magnétique.",
+        "Et en plus, pour celles-ci, pas besoin d’avoir la main verte. 😉"
+      ],
       cta: "Voir tout"
     },
     en: {
-      description:
-        "Available as high-quality paper prints or premium metal posters by Displate — perfect to bring a little botanical calm into any room.",
+      description: [
+        "Printed either on thick art paper or as metal posters via Displate, ready to hang with their magnetic system.",
+        "And unlike real plants, they survive even without a green thumb. 😉"
+      ],
       cta: "See everything"
     }
   };
@@ -62,7 +69,7 @@ export default function PosterSection({
       >
         {/* === TITRE === */}
         <h2 className="text-2xl sm:text-3xl md:text-4xl font-medium tracking-tight text-slate-800 mb-6">
-          {title}
+          {title[lang]}
         </h2>
 
         {/* === GRILLE DES POSTERS === */}
@@ -92,10 +99,17 @@ export default function PosterSection({
           />
         </div>
 
-        {/* === DESCRIPTION TRADUITE === */}
-        <p className="text-slate-700/90 text-[0.95rem] sm:text-[1rem] mb-8 leading-relaxed max-w-xl mx-auto text-center-justify">
-          {t.description}
-        </p>
+        {/* === DESCRIPTION TRADUITE (plusieurs lignes) === */}
+        <div className="text-slate-700/90 text-[0.95rem] sm:text-[1rem] mb-8 leading-relaxed max-w-xl mx-auto text-center-justify">
+          {Array.isArray(t.description)
+            ? t.description.map((line, i) => (
+                <p key={i} className="mb-3 last:mb-0">
+                  {line}
+                </p>
+              ))
+            : <p>{t.description}</p>
+          }
+        </div>
 
         {/* === CTA === */}
         <Button as="a" href={ctaHref} variant="primary">
