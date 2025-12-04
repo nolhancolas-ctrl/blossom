@@ -4,28 +4,18 @@
 import PageSection from "@/components/layout/PageSection";
 import Button from "@/components/ui/Button";
 import { useLang } from "@/hooks/useLang";
+import { collections } from "@/lib/collections";
+import { useEffect, useRef, useState } from "react";
 
 type Props = {
-  leftSrc: string;
-  rightSrc: string;
-  title: {
-    en: string;
-    fr: string;
-  };
+  title: { en: string; fr: string };
   ctaHref?: string;
-  interactive?: boolean;
 };
 
-export default function PosterSection({
-  leftSrc,
-  rightSrc,
-  title,
-  ctaHref = "/shop/collection",
-  interactive = false,
-}: Props) {
-  const { lang } = useLang(); // fr or en
+export default function PosterSection({ title, ctaHref = "/shop/collection" }: Props) {
+  const { lang } = useLang();
 
-  // Traductions locales
+  // --- Traductions ---
   const translations = {
     fr: {
       description: [
@@ -45,17 +35,14 @@ export default function PosterSection({
 
   const t = translations[lang];
 
-  // Dimensions "design" des posters (fixes)
-  const POSTER_W = 350;
-  const POSTER_H = 400;
-  const SAFE_PAD = 10;
-  const CARD_W = POSTER_W + SAFE_PAD * 2;
+  // --- 1 poster par collection ---
+  const previewImages = collections.map((c) => c.images[0]);
 
   return (
     <PageSection>
       <div
         className="
-          w-full max-w-2xl mx-auto
+          w-full max-w-5xl mx-auto
           bg-white/10 md:bg-white/10
           backdrop-blur-none md:backdrop-blur-md
           border border-white/15 md:border-white/20
@@ -67,48 +54,20 @@ export default function PosterSection({
           text-center
         "
       >
+
         {/* === TITRE === */}
         <h2 className="text-2xl sm:text-3xl md:text-4xl font-medium tracking-tight text-slate-800 mb-6">
           {title[lang]}
         </h2>
 
-        {/* === GRILLE DES POSTERS === */}
-        <div
-          className="
-            w-full mt-[-20px] mb-[-20px]
-            grid gap-4
-            grid-cols-1 md:grid-cols-2
-            items-center justify-items-center
-          "
-          style={{
-            transform: "scale(0.85)",
-            transformOrigin: "top center",
-          }}
-        >
-          <PosterCard
-            src={leftSrc}
-            w={CARD_W}
-            h={POSTER_H}
-            interactive={interactive}
-          />
-          <PosterCard
-            src={rightSrc}
-            w={CARD_W}
-            h={POSTER_H}
-            interactive={interactive}
-          />
-        </div>
+        {/* === CAROUSEL INFINI === */}
+        <InfiniteCarousel images={previewImages} />
 
-        {/* === DESCRIPTION TRADUITE (plusieurs lignes) === */}
-        <div className="text-slate-700/90 text-[0.95rem] sm:text-[1rem] mb-8 leading-relaxed max-w-xl mx-auto text-center-justify">
-          {Array.isArray(t.description)
-            ? t.description.map((line, i) => (
-                <p key={i} className="mb-3 last:mb-0">
-                  {line}
-                </p>
-              ))
-            : <p>{t.description}</p>
-          }
+        {/* === DESCRIPTION === */}
+        <div className="text-slate-700/90 text-[0.95rem] sm:text-[1rem] leading-relaxed mb-8 max-w-xl mx-auto text-center-justify">
+          {t.description.map((line, i) => (
+            <p key={i} className="mb-3 last:mb-0">{line}</p>
+          ))}
         </div>
 
         {/* === CTA === */}
@@ -120,45 +79,71 @@ export default function PosterSection({
   );
 }
 
-/* ==========================================================================
-   POSTER CARD — oversize iframe pour cacher le logo Spline
-   ========================================================================== */
-type PosterCardProps = {
-  src: string;
-  w: number;
-  h: number;
-  interactive?: boolean;
-};
+/* -------------------------------------------------------
+   INFINITE CAROUSEL (1 poster/collection)
+------------------------------------------------------- */
+function InfiniteCarousel({ images }: { images: any[] }) {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [ready, setReady] = useState(false);
+  const [rowWidth, setRowWidth] = useState(0);
 
-function PosterCard({ src, w, h, interactive = false }: PosterCardProps) {
-  const OVERSIZE_W_PCT = 108;
-  const OVERSIZE_H_PCT = 122;
+  // Mesure la largeur d'une ligne
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track) return;
+
+    const id = setTimeout(() => {
+      const items = track.querySelectorAll(".carousel-item");
+      if (items.length > 0) {
+        const total = Array.from(items)
+          .slice(0, images.length)
+          .reduce((acc, el) => acc + (el as HTMLElement).offsetWidth + 24, 0);
+
+        setRowWidth(total);
+        setReady(true);
+      }
+    }, 60);
+
+    return () => clearTimeout(id);
+  }, [images]);
 
   return (
-    <div
-      className="relative overflow-hidden rounded-2xl"
-      style={{
-        width: `${w}px`,
-        height: `${h}px`,
-      }}
-    >
-      <iframe
-        src={src}
-        title="Spline 3D poster"
+    <div className="relative w-full overflow-hidden rounded-2xl bg-white/40 border border-white/60 shadow-inner mb-8">
+      <div
+        ref={trackRef}
+        className="flex gap-6 py-6 px-6 carousel-track"
         style={{
-          position: "absolute",
-          inset: 0,
-          width: `${OVERSIZE_W_PCT}%`,
-          height: `${OVERSIZE_H_PCT}%`,
-          border: 0,
-          pointerEvents: interactive ? "auto" : "none",
-          objectFit: "cover",
-          transform: "translate(-7%, 0%)",
+          width: ready ? rowWidth * 2 : "auto",
+          animation: ready ? `marquee ${rowWidth / 38}s linear infinite` : "none",
         }}
-        allow="autoplay; fullscreen"
-        allowFullScreen
-        loading="eager"
-        referrerPolicy="no-referrer-when-downgrade"
+      >
+        {images.map((img) => (
+          <PosterThumb key={img.id} img={img} />
+        ))}
+        {images.map((img) => (
+          <PosterThumb key={img.id + "-dup"} img={img} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function PosterThumb({ img }: { img: any }) {
+  return (
+    <div
+      className="
+        carousel-item
+        relative flex-shrink-0
+        h-56 w-40 sm:h-72 sm:w-52 lg:h-80 lg:w-60
+        overflow-hidden rounded-2xl
+        shadow-md bg-slate-200/60
+      "
+    >
+      <img
+        src={img.src}
+        alt={img.alt || ""}
+        className="h-full w-full object-cover"
+        loading="lazy"
       />
     </div>
   );
