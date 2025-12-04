@@ -21,7 +21,7 @@ export default function FooterOffWhite({
    * -------------------------------------------------------------- */
   const t = {
     en: {
-      contactTitle: "Something to say? I read everything.",
+      contactTitle: "Something to say ? I answer to everything !",
       contactCTA: "send me a mail",
 
       elsewhereTitle: "Elsewhere around the web.",
@@ -35,7 +35,7 @@ export default function FooterOffWhite({
     },
 
     fr: {
-      contactTitle: "Une question ? Je lis tout.",
+      contactTitle: "Une question ? Je répond à tout !",
       contactCTA: "m’écrire",
 
       elsewhereTitle: "Ailleurs sur le web.",

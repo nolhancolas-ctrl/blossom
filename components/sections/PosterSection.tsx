@@ -75,7 +75,7 @@ export default function PosterSection({
         {/* === GRILLE DES POSTERS === */}
         <div
           className="
-            w-full mb-8
+            w-full mt-[-20px] mb-[-20px]
             grid gap-4
             grid-cols-1 md:grid-cols-2
             items-center justify-items-center
