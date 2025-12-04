@@ -8,6 +8,7 @@ import MailingSection from "@/components/sections/MailingSection";
 import DescriptionSection from "@/components/sections/DescriptionSection";
 import PosterSection from "@/components/sections/PosterSection";
 import PageSection from "@/components/layout/PageSection";
+import { Analytics } from "@vercel/analytics/next"
 
 const CountdownSection = dynamic(
   () => import("@/components/sections/CountdownSection"),
