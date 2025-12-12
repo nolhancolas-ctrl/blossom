@@ -54,9 +54,9 @@ export default function BookHero({
   decorWidthRatioSquare = 0.4,
   decorWidthRatioMobile = 0.4,
   // scale (🔁 ajustés pour un livre plus grand)
-  desktopScalePct = 0.9,    // avant 0.8
-  maxScaleDesktop = 1.05,   // avant 0.9
-  maxScaleMobile = 0.98,    // avant 0.88
+  desktopScalePct = 1.05,
+  maxScaleDesktop = 1.25,  
+  maxScaleMobile = 0.78,   
   centerOffsetPct = 0.48,
   // oversize cropping
   extraSideCropPx = 600,
@@ -95,7 +95,7 @@ export default function BookHero({
       const widthFitDesktopReduced = widthFit * desktopScalePct;
 
       // 🔁 Mobile : on utilise plus de hauteur qu’avant (0.75 au lieu de 0.6)
-      const mobileFit = (vh0Ref.current * 0.75) / designH;
+      const mobileFit = (vh0Ref.current * 0.65) / designH;
 
       let target: number;
       if (ar > 1.05) {
